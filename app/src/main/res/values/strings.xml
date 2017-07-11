@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">2048</string>
+    <string name="test">Show me Something</string>
+</resources>
