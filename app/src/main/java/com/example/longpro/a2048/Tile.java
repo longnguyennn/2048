@@ -9,6 +9,10 @@ import android.util.AttributeSet;
 
 public class Tile extends android.support.v7.widget.AppCompatTextView {
     private int value;
+    private int[] prevPosition;
+    private int[] aPosition;
+    public boolean isMoved;
+    public boolean isMerged;
 
     private final int[] TILE_COLOR = {
             0xcdc0b0,
@@ -25,18 +29,21 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             0xedc22e,
     };
 
-    public Tile(Context context) {
+    public Tile(Context context, int[] position) {
         super(context);
         this.value = 0;
+        this.prevPosition = position;
 //        setTileBackground();
     }
 
-    public Tile(Context context, int value) {
+    public Tile(Context context, int[] position, int value) {
         super(context);
         this.value = value;
-        setTileBackground();
+        this.prevPosition = position;
+//        setTileBackground();
     }
 
+//    might not need it here
     public Tile(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.value = 0;
@@ -57,6 +64,29 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
     public void setValue(int input) {
         this.value = input;
     }
+
+    private void moveTo(int[] position) {
+        this.aPosition = position;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private void setTileBackground() {
         setBackgroundResource(R.drawable.component);
