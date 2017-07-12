@@ -138,27 +138,55 @@ public class GameFragment extends Fragment {
         }
 
         // FIXME: 7/12/17 this needs to be swipeLeft instead of swipeLeftRow
-        private void swipeLeftRow(Tile[] row) {
-            int size = row.length;
-            for (int index = 1; index < size; index = index + 1) {
-                int value = row[index].getValue();
-                if ( value == 0 ) {
-                    continue;
-                }
-                int prevIndex = index - 1;
-                while ( prevIndex > -1 ) {
-                    int preValue = row[prevIndex].getValue();
-                    if (preValue != 0) {
-                        break;
+        private void swipeLeft() {
+            int arraySize = 4;
+            for (int i = 0; i < arraySize; i = i + 1) {
+                Tile[] row = this.tileArray[i];
+                for (int j = 1; j < arraySize; j = j + 1) {
+                    Tile currentTile = row[j];
+                    int currentValue = currentTile.getValue();
+                    if (currentValue == 0) {
+                        continue;
                     }
-                    else if (preValue == 0) {
-                        row[index].isMoved = true;
+                    currentTile.setPrevPosition(i, j);
+                    int prevIndex = j - 1;
+                    while (prevIndex > -1) {
+                        int preValue = row[prevIndex].getValue();
+                        int[] newPosition = new int[2];
+                        newPosition[0] = i;
+                        if ( preValue != 0 ) {
+                            if ( preValue == currentValue ) {
+                                currentTile.isMerged = true;
+                                newPosition[1] = prevIndex;
+                            }
+                            else {
+                                newPosition[1] = prevIndex + 1;
+                            }
+                            break;
+                        } else {
+                            if ( prevIndex == 0 ) {
+                                newPosition[1] = prevIndex;
+                            }
+                            currentTile.isMoved = true;
+                            prevIndex = prevIndex - 1;
+                        }
+                        // call method to switch position here -- ?
+                        // need a move tile method here
+                        move(currentTile, newPosition);
                     }
-                    prevIndex = prevIndex - 1;
                 }
             }
         }
 
+        // set the Tile to the new position in the tileArray
+        // and set the prevPosition to new Tile
+        private void move(Tile tile, int[] newPosition) {
+            if ( tile.isMoved ) {
+                tileArray[newPosition[0]][newPosition[1]] = tile;
+                int[] prevPosition = tile.getPrevPosition();
+                tileArray[prevPosition[0]][prevPosition[1]] = new Tile(context, prevPosition);
+            }
+        }
     }
 
 

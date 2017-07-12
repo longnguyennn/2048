@@ -56,6 +56,15 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         setTileBackground();
     }
 
+    public void setPrevPosition(int i, int j) {
+        this.prevPosition[0] = i;
+        this.prevPosition[1] = j;
+    }
+
+    public int[] getPrevPosition() {
+        return this.prevPosition;
+    }
+
 
     public int getValue() {
         return this.value;
@@ -65,9 +74,6 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         this.value = input;
     }
 
-    private void moveTo(int[] position) {
-        this.aPosition = position;
-    }
 
 
 
