@@ -1,5 +1,6 @@
 package com.example.longpro.a2048;
 
+import android.animation.ObjectAnimator;
 import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
@@ -12,7 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 
@@ -24,7 +27,7 @@ public class GameFragment extends Fragment {
     private GestureDetectorCompat mDetector;
     View.OnTouchListener mListener;
     private boolean scroll = false;
-    private Tile[][] initArray;
+    private Tile[][] tileArray;
     private Context context;
     private Game game;
 
@@ -33,7 +36,7 @@ public class GameFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         context = getActivity();
-        initArray = new Tile[4][4];
+        tileArray = new Tile[4][4];
         final View gameView = inflater.inflate(R.layout.game_container, container, false);
         final RelativeLayout game_container = gameView.findViewById(R.id.game_container);
         mDetector = new GestureDetectorCompat(context, new MyGestureDetector());
@@ -65,9 +68,7 @@ public class GameFragment extends Fragment {
                         for (int j = 0; j < 4; j = j + 1) {
                             RelativeLayout.LayoutParams TileParams =
                                     new RelativeLayout.LayoutParams(TileDimension, TileDimension);
-                            int[] position = new int[2];
-                            position[0] = i;
-                            position[1] = j;
+                            int position = 10 * i + j;
                             Tile tile = new Tile(context, position);
                             tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
@@ -77,10 +78,10 @@ public class GameFragment extends Fragment {
 
                             else {
                                 TileParams.setMargins(btwMargin, Margin, btwMargin, btwMargin);
-                                TileParams.addRule(RelativeLayout.RIGHT_OF, initArray[i][j - 1].getId());
+                                TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
                             }
                             game_container.addView(tile, TileParams);
-                            initArray[i][j] = tile;
+                            tileArray[i][j] = tile;
                         }
                     }
 
@@ -88,28 +89,26 @@ public class GameFragment extends Fragment {
                         for (int j = 0; j < 4; j = j + 1) {
                             RelativeLayout.LayoutParams TileParams =
                                     new RelativeLayout.LayoutParams(TileDimension, TileDimension);
-                            int[] position = new int[2];
-                            position[0] = i;
-                            position[1] = j;
+                            int position = 10 * i + j;
                             Tile tile = new Tile(context, position);
                             tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
                                 TileParams.setMargins(Margin, btwMargin, btwMargin, btwMargin);
-                                TileParams.addRule(RelativeLayout.BELOW, initArray[i - 1][j].getId());
+                                TileParams.addRule(RelativeLayout.BELOW, tileArray[i - 1][j].getId());
                             }
                             else {
                                 TileParams.setMargins(btwMargin, btwMargin, btwMargin, btwMargin);
-                                TileParams.addRule(RelativeLayout.RIGHT_OF, initArray[i][j - 1].getId());
-                                TileParams.addRule(RelativeLayout.BELOW, initArray[i - 1][j].getId());
+                                TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
+                                TileParams.addRule(RelativeLayout.BELOW, tileArray[i - 1][j].getId());
                             }
                             game_container.addView(tile, TileParams);
-                            initArray[i][j] = tile;
+                            tileArray[i][j] = tile;
                         }
                     }
                 }
 
-                game = new Game(initArray);
+                game = new Game();
 
             }
         });
@@ -118,10 +117,8 @@ public class GameFragment extends Fragment {
 
 
     private class Game {
-        private Tile[][] tileArray;
 
-        private Game(Tile[][] tileArray) {
-            this.tileArray = tileArray;
+        private Game() {
             setNewNumber();
             setNewNumber();
         }
@@ -137,55 +134,84 @@ public class GameFragment extends Fragment {
             tileArray[i][j].setValue(2);
         }
 
-        // FIXME: 7/12/17 this needs to be swipeLeft instead of swipeLeftRow
-        private void swipeLeft() {
+        private void swipeHandler() {
+            Animator animator = new Animator();
+            swipeLeft(animator);
+        }
+
+        private void swipeLeft(Animator animator) {
             int arraySize = 4;
             for (int i = 0; i < arraySize; i = i + 1) {
-                Tile[] row = this.tileArray[i];
+                Tile[] row = tileArray[i];
                 for (int j = 1; j < arraySize; j = j + 1) {
                     Tile currentTile = row[j];
                     int currentValue = currentTile.getValue();
                     if (currentValue == 0) {
                         continue;
                     }
-                    currentTile.setPrevPosition(i, j);
                     int prevIndex = j - 1;
                     while (prevIndex > -1) {
-                        int preValue = row[prevIndex].getValue();
-                        int[] newPosition = new int[2];
-                        newPosition[0] = i;
-                        if ( preValue != 0 ) {
-                            if ( preValue == currentValue ) {
-                                currentTile.isMerged = true;
-                                newPosition[1] = prevIndex;
+                        Tile prevTile = row[prevIndex];
+                        int prevValue = prevTile.getValue();
+                        if ( prevValue != 0 ) {
+                            if ( prevValue == currentValue ) {
+                                // calling a merge method here
+                                merge(currentTile, prevTile, animator);
                             }
                             else {
-                                newPosition[1] = prevIndex + 1;
+                                // move current tile to the tile next to tile at prevIndex
+                                Tile targetTile = row[prevIndex + 1];
+                                move(currentTile, targetTile, animator);
                             }
                             break;
                         } else {
+                            // move to prevIndex because there's no more to go
                             if ( prevIndex == 0 ) {
-                                newPosition[1] = prevIndex;
+                                Tile targetTile = row[prevIndex];
+                                move(currentTile, targetTile, animator);
                             }
-                            currentTile.isMoved = true;
                             prevIndex = prevIndex - 1;
                         }
-                        // call method to switch position here -- ?
-                        // need a move tile method here
-                        move(currentTile, newPosition);
                     }
                 }
             }
         }
 
-        // set the Tile to the new position in the tileArray
-        // and set the prevPosition to new Tile
-        private void move(Tile tile, int[] newPosition) {
-            if ( tile.isMoved ) {
-                tileArray[newPosition[0]][newPosition[1]] = tile;
-                int[] prevPosition = tile.getPrevPosition();
-                tileArray[prevPosition[0]][prevPosition[1]] = new Tile(context, prevPosition);
+        // Merge current tile with another tile
+        private void merge(Tile currentTile, Tile targetTile, Animator animator) {
+            int value = currentTile.getValue();
+            int newValue = 2 * value;
+            targetTile.setValue(newValue);
+            currentTile.setValue(0);
+            // add a merge object animator here .. i.e: addMerge
+            animator.addMerge();
+        }
+
+        // Move current tile to target tile
+        private void move(Tile currentTile, Tile targetTile, Animator animator) {
+            int value = currentTile.getValue();
+            targetTile.setValue(value);
+            currentTile.setValue(0);
+            // add a move object animator here .. i.e: addMove
+            animator.addMove();
+        }
+
+
+        // add more here ...
+        class Animator {
+            private List<ObjectAnimator> moveList;
+            private List<ObjectAnimator> mergeList;
+            private ObjectAnimator newTile;
+
+            public Animator() {
+                moveList = new ArrayList<>();
+                mergeList = new ArrayList<>();
+                newTile = new ObjectAnimator();
             }
+
+            public void addMerge() {}
+
+            public void addMove() {}
         }
     }
 

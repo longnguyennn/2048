@@ -9,10 +9,7 @@ import android.util.AttributeSet;
 
 public class Tile extends android.support.v7.widget.AppCompatTextView {
     private int value;
-    private int[] prevPosition;
-    private int[] aPosition;
-    public boolean isMoved;
-    public boolean isMerged;
+    private int prevPosition;
 
     private final int[] TILE_COLOR = {
             0xcdc0b0,
@@ -29,42 +26,12 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             0xedc22e,
     };
 
-    public Tile(Context context, int[] position) {
+    public Tile(Context context, int initPosition) {
         super(context);
         this.value = 0;
-        this.prevPosition = position;
+        this.prevPosition = initPosition;
 //        setTileBackground();
     }
-
-    public Tile(Context context, int[] position, int value) {
-        super(context);
-        this.value = value;
-        this.prevPosition = position;
-//        setTileBackground();
-    }
-
-//    might not need it here
-    public Tile(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        this.value = 0;
-        setTileBackground();
-    }
-
-    public Tile(Context context, AttributeSet attrs, int value) {
-        super(context, attrs);
-        this.value = value;
-        setTileBackground();
-    }
-
-    public void setPrevPosition(int i, int j) {
-        this.prevPosition[0] = i;
-        this.prevPosition[1] = j;
-    }
-
-    public int[] getPrevPosition() {
-        return this.prevPosition;
-    }
-
 
     public int getValue() {
         return this.value;
@@ -72,8 +39,12 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
 
     public void setValue(int input) {
         this.value = input;
+        this.setText(Integer.toString(this.value));
     }
 
+    public int getPrevPosition() { return this.prevPosition; }
+
+    public void setPrevPosition(int newPosition) { this.prevPosition = newPosition; }
 
 
 
@@ -87,13 +58,7 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
 
 
 
-
-
-
-
-
-
-
+    // this might not be needed
     private void setTileBackground() {
         setBackgroundResource(R.drawable.component);
         setText(Integer.toString(this.value));
