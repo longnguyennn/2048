@@ -9,7 +9,8 @@ import android.util.AttributeSet;
 
 public class Tile extends android.support.v7.widget.AppCompatTextView {
     private int value;
-    private int prevPosition;
+    public int position;
+    public boolean isMerged;
 
     private final int[] TILE_COLOR = {
             0xcdc0b0,
@@ -26,25 +27,37 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             0xedc22e,
     };
 
-    public Tile(Context context, int initPosition) {
+    public Tile(Context context, int position) {
         super(context);
         this.value = 0;
-        this.prevPosition = initPosition;
+        this.position = position;
+        this.isMerged = false;
+        // FIXME: 7/13/17 TESTING
+        setValue(value);
 //        setTileBackground();
+    }
+
+    public Tile(Context context, int position, int value) {
+        super(context);
+        this.value = value;
+        this.position = position;
+        this.isMerged = false;
+        // FIXME: 7/13/17 TESTING
+        setValue(value);
     }
 
     public int getValue() {
         return this.value;
     }
 
+    // FIXME: 7/13/17 This method should be fixed
     public void setValue(int input) {
         this.value = input;
         this.setText(Integer.toString(this.value));
     }
 
-    public int getPrevPosition() { return this.prevPosition; }
 
-    public void setPrevPosition(int newPosition) { this.prevPosition = newPosition; }
+
 
 
 

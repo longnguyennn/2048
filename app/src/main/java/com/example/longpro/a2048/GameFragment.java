@@ -1,5 +1,6 @@
 package com.example.longpro.a2048;
 
+import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Fragment;
 import android.content.Context;
@@ -30,6 +31,8 @@ public class GameFragment extends Fragment {
     private Tile[][] tileArray;
     private Context context;
     private Game game;
+    private int margin;
+    private int tileDimension;
 
 
     @Override
@@ -55,9 +58,9 @@ public class GameFragment extends Fragment {
             @Override
             public void run() {
                 int gcDimension = game_container.getHeight();
-                int Margin = gcDimension / 30;
-                int btwMargin = Margin / 2;
-                int TileDimension = (gcDimension - (5 * Margin)) / 4;
+                margin = gcDimension / 30;
+                int btwMargin = margin / 2;
+                tileDimension = (gcDimension - (5 * margin)) / 4;
 
 
 
@@ -67,17 +70,18 @@ public class GameFragment extends Fragment {
                     if ( i == 0 ) {
                         for (int j = 0; j < 4; j = j + 1) {
                             RelativeLayout.LayoutParams TileParams =
-                                    new RelativeLayout.LayoutParams(TileDimension, TileDimension);
+                                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
                             int position = 10 * i + j;
                             Tile tile = new Tile(context, position);
+                            // FIXME: 7/13/17 - doesn't need setBackgroundResource here ....
                             tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
-                                TileParams.setMargins(Margin, Margin, btwMargin, btwMargin);
+                                TileParams.setMargins(margin, margin, btwMargin, btwMargin);
                             }
 
                             else {
-                                TileParams.setMargins(btwMargin, Margin, btwMargin, btwMargin);
+                                TileParams.setMargins(btwMargin, margin, btwMargin, btwMargin);
                                 TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
                             }
                             game_container.addView(tile, TileParams);
@@ -88,13 +92,13 @@ public class GameFragment extends Fragment {
                     else {
                         for (int j = 0; j < 4; j = j + 1) {
                             RelativeLayout.LayoutParams TileParams =
-                                    new RelativeLayout.LayoutParams(TileDimension, TileDimension);
+                                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
                             int position = 10 * i + j;
                             Tile tile = new Tile(context, position);
                             tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
-                                TileParams.setMargins(Margin, btwMargin, btwMargin, btwMargin);
+                                TileParams.setMargins(margin, btwMargin, btwMargin, btwMargin);
                                 TileParams.addRule(RelativeLayout.BELOW, tileArray[i - 1][j].getId());
                             }
                             else {
@@ -108,7 +112,7 @@ public class GameFragment extends Fragment {
                     }
                 }
 
-                game = new Game();
+                game = new Game(game_container);
 
             }
         });
@@ -117,8 +121,10 @@ public class GameFragment extends Fragment {
 
 
     private class Game {
+        private RelativeLayout gameContainer;
 
-        private Game() {
+        private Game(RelativeLayout gameContainer) {
+            this.gameContainer = gameContainer;
             setNewNumber();
             setNewNumber();
         }
@@ -135,8 +141,11 @@ public class GameFragment extends Fragment {
         }
 
         private void swipeHandler() {
+//            Animator animator = new Animator();
+//            animator.addMerge(tileArray[0][0]);
             Animator animator = new Animator();
-            swipeLeft(animator);
+            moveTile(tileArray[0][1], tileArray[0][0], animator);
+
         }
 
         private void swipeLeft(Animator animator) {
@@ -153,22 +162,23 @@ public class GameFragment extends Fragment {
                     while (prevIndex > -1) {
                         Tile prevTile = row[prevIndex];
                         int prevValue = prevTile.getValue();
-                        if ( prevValue != 0 ) {
-                            if ( prevValue == currentValue ) {
-                                // calling a merge method here
-                                merge(currentTile, prevTile, animator);
-                            }
-                            else {
+                        if (prevValue != 0) {
+                            if (prevValue == currentValue) {
+                                // set isMerged to true
+                                currentTile.isMerged = true;
+                                mergeTile(currentTile, prevTile, animator);
+                            } else {
                                 // move current tile to the tile next to tile at prevIndex
                                 Tile targetTile = row[prevIndex + 1];
-                                move(currentTile, targetTile, animator);
+                                moveTile(currentTile, targetTile, animator);
                             }
                             break;
                         } else {
                             // move to prevIndex because there's no more to go
-                            if ( prevIndex == 0 ) {
+                            if (prevIndex == 0) {
                                 Tile targetTile = row[prevIndex];
-                                move(currentTile, targetTile, animator);
+                                moveTile(currentTile, targetTile, animator);
+                                break;
                             }
                             prevIndex = prevIndex - 1;
                         }
@@ -178,42 +188,68 @@ public class GameFragment extends Fragment {
         }
 
         // Merge current tile with another tile
-        private void merge(Tile currentTile, Tile targetTile, Animator animator) {
+        private void mergeTile(Tile currentTile, Tile targetTile, Animator animator) {
             int value = currentTile.getValue();
             int newValue = 2 * value;
             targetTile.setValue(newValue);
             currentTile.setValue(0);
             // add a merge object animator here .. i.e: addMerge
-            animator.addMerge();
+            animator.addMerge(targetTile);
         }
 
         // Move current tile to target tile
-        private void move(Tile currentTile, Tile targetTile, Animator animator) {
+        private void moveTile(Tile currentTile, Tile targetTile, Animator animator) {
+            // clone currentTile on top of currentTile and call addMove on it
+
             int value = currentTile.getValue();
+            // FIXME: 7/13/17 TESTING
+            Log.i("This is working", "oh yeah");
+            Tile animateTile = new Tile(context, 1000, 1000);
+            RelativeLayout.LayoutParams TileParams =
+                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
+            TileParams.addRule(RelativeLayout.START_OF, currentTile.getId());
+            gameContainer.addView(animateTile, TileParams);
             targetTile.setValue(value);
             currentTile.setValue(0);
             // add a move object animator here .. i.e: addMove
-            animator.addMove();
+            animator.addMove(currentTile, targetTile);
         }
 
+        private class Animator {
+            private List<AnimatorSet> moveSet;
+            private List<AnimatorSet> mergeSet;
+            private int scaleDuration;
+//            private ObjectAnimator newTile;
 
-        // add more here ...
-        class Animator {
-            private List<ObjectAnimator> moveList;
-            private List<ObjectAnimator> mergeList;
-            private ObjectAnimator newTile;
-
-            public Animator() {
-                moveList = new ArrayList<>();
-                mergeList = new ArrayList<>();
-                newTile = new ObjectAnimator();
+            private Animator() {
+                moveSet = new ArrayList<>();
+                mergeSet = new ArrayList<>();
+                scaleDuration = 500;
+//                newTile = new ObjectAnimator();
             }
 
-            public void addMerge() {}
+            public void addMerge(Tile tile) {
+                AnimatorSet scaleAnimator = new AnimatorSet();
+                ObjectAnimator scaleHeight = ObjectAnimator.ofFloat(tile, "scaleY",
+                        1f, 1.1f, 1f);
+                scaleHeight.setDuration(scaleDuration);
 
-            public void addMove() {}
+                ObjectAnimator scaleWidth = ObjectAnimator.ofFloat(tile, "scaleX",
+                        1f, 1.1f, 1f);
+                scaleWidth.setDuration(scaleDuration);
+                scaleAnimator.play(scaleHeight).with(scaleWidth);
+                mergeSet.add(scaleAnimator);
+            }
+
+            public void addMove(Tile moveTile, Tile targetTile) {
+
+            }
+
         }
+
     }
+
+
 
 
 
@@ -238,7 +274,7 @@ public class GameFragment extends Fragment {
 //                 need condition here -- not swipe when distance < threshold
 
 
-
+                game.swipeHandler();
 //                game.swipeHandler(event1, event2);
                 scroll = true;
             }
