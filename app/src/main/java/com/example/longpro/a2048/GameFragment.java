@@ -140,11 +140,12 @@ public class GameFragment extends Fragment {
             tileArray[i][j].setValue(2);
         }
 
+        // FIXME: 7/14/17 - TESTING - this needs to be fixed later 
         private void swipeHandler() {
 //            Animator animator = new Animator();
 //            animator.addMerge(tileArray[0][0]);
             Animator animator = new Animator();
-            moveTile(tileArray[0][1], tileArray[0][0], animator);
+            moveTile(tileArray[3][2], tileArray[0][0], animator);
 
         }
 
@@ -202,17 +203,40 @@ public class GameFragment extends Fragment {
             // clone currentTile on top of currentTile and call addMove on it
 
             int value = currentTile.getValue();
+            int position = currentTile.position;
             // FIXME: 7/13/17 TESTING
-            Log.i("This is working", "oh yeah");
-            Tile animateTile = new Tile(context, 1000, 1000);
-            RelativeLayout.LayoutParams TileParams =
-                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
-            TileParams.addRule(RelativeLayout.START_OF, currentTile.getId());
-            gameContainer.addView(animateTile, TileParams);
+            Tile animateTile = new Tile(context, position);
+            animateTile.setValue(1000);
+            animateTile.setBackgroundResource(R.drawable.test);
+            // FIXME: 7/14/17 INFO - calculateParams works
+            RelativeLayout.LayoutParams params = calculateParams(currentTile);
+            gameContainer.addView(animateTile, params);
             targetTile.setValue(value);
             currentTile.setValue(0);
             // add a move object animator here .. i.e: addMove
             animator.addMove(currentTile, targetTile);
+        }
+
+        // FIXME: 7/14/17 this METHOD is working
+        // helper method - return relativelayout.param to add new tile on top of current tile
+        private RelativeLayout.LayoutParams calculateParams(Tile currentTile) {
+            int position = currentTile.position;
+            RelativeLayout.LayoutParams TileParams =
+                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
+            int xPosition = position % 10;
+            int yPosition = position / 10;
+            int leftMargin = (xPosition == 0) ? margin : margin / 2;
+            int topMargin = (yPosition == 0) ? margin : margin / 2;
+            int rightMargin = margin / 2;
+            int btmMargin = margin / 2;
+            TileParams.setMargins(leftMargin, topMargin, rightMargin, btmMargin);
+            if (yPosition != 0) {
+                TileParams.addRule(RelativeLayout.BELOW, tileArray[yPosition - 1][xPosition].getId());
+            }
+            if (xPosition != 0) {
+                TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[yPosition][xPosition - 1].getId());
+            }
+            return TileParams;
         }
 
         private class Animator {

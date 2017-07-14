@@ -32,18 +32,7 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         this.value = 0;
         this.position = position;
         this.isMerged = false;
-        // FIXME: 7/13/17 TESTING
-        setValue(value);
 //        setTileBackground();
-    }
-
-    public Tile(Context context, int position, int value) {
-        super(context);
-        this.value = value;
-        this.position = position;
-        this.isMerged = false;
-        // FIXME: 7/13/17 TESTING
-        setValue(value);
     }
 
     public int getValue() {
