@@ -10,7 +10,6 @@ import android.util.AttributeSet;
 public class Tile extends android.support.v7.widget.AppCompatTextView {
     private int value;
     public int position;
-    public boolean isMerged;
 
     private final int[] TILE_COLOR = {
             0xcdc0b0,
@@ -31,7 +30,6 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         super(context);
         this.value = 0;
         this.position = position;
-        this.isMerged = false;
 //        setTileBackground();
     }
 

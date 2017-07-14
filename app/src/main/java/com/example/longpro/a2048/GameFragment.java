@@ -1,5 +1,6 @@
 package com.example.longpro.a2048;
 
+import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Fragment;
@@ -12,10 +13,10 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewManager;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -142,13 +143,17 @@ public class GameFragment extends Fragment {
 
         // FIXME: 7/14/17 - TESTING - this needs to be fixed later 
         private void swipeHandler() {
-//            Animator animator = new Animator();
-//            animator.addMerge(tileArray[0][0]);
             Animator animator = new Animator();
-            moveTile(tileArray[3][2], tileArray[0][0], animator);
+//            animator.addMerge(tileArray[0][0]);
 
+            swipeLeft(animator);
+            if (animator.moveSet.size() > 0) {
+                animator.move();
+                setNewNumber();
+            }
         }
 
+        // FIXME: 7/14/17 swipeLeft is broken
         private void swipeLeft(Animator animator) {
             int arraySize = 4;
             for (int i = 0; i < arraySize; i = i + 1) {
@@ -164,15 +169,13 @@ public class GameFragment extends Fragment {
                         Tile prevTile = row[prevIndex];
                         int prevValue = prevTile.getValue();
                         if (prevValue != 0) {
-                            if (prevValue == currentValue) {
-                                // set isMerged to true
-                                currentTile.isMerged = true;
-                                mergeTile(currentTile, prevTile, animator);
-                            } else {
-                                // move current tile to the tile next to tile at prevIndex
-                                Tile targetTile = row[prevIndex + 1];
-                                moveTile(currentTile, targetTile, animator);
-                            }
+                            // move current tile to the tile next to tile at prevIndex
+                            Tile targetTile = row[prevIndex + 1];
+                            moveTile(currentTile, targetTile, animator);
+                            // FIXME: 7/14/17 need fix later
+//                            if (prevValue == targetTile.getValue()) {
+//                                mergeTile(targetTile, prevTile, animator);
+//                            }
                             break;
                         } else {
                             // move to prevIndex because there's no more to go
@@ -181,13 +184,14 @@ public class GameFragment extends Fragment {
                                 moveTile(currentTile, targetTile, animator);
                                 break;
                             }
-                            prevIndex = prevIndex - 1;
                         }
+                        prevIndex = prevIndex - 1;
                     }
                 }
             }
         }
 
+        // FIXME: 7/14/17 might be added to moveTile as a feature
         // Merge current tile with another tile
         private void mergeTile(Tile currentTile, Tile targetTile, Animator animator) {
             int value = currentTile.getValue();
@@ -204,51 +208,31 @@ public class GameFragment extends Fragment {
 
             int value = currentTile.getValue();
             int position = currentTile.position;
-            // FIXME: 7/13/17 TESTING
             Tile animateTile = new Tile(context, position);
-            animateTile.setValue(1000);
+            // FIXME: 7/15/17 testing - change background later
+            animateTile.setValue(value);
             animateTile.setBackgroundResource(R.drawable.test);
-            // FIXME: 7/14/17 INFO - calculateParams works
-            RelativeLayout.LayoutParams params = calculateParams(currentTile);
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
             gameContainer.addView(animateTile, params);
-            targetTile.setValue(value);
+//            set targetTile value after animation
+//            targetTile.setValue(value);
             currentTile.setValue(0);
             // add a move object animator here .. i.e: addMove
-            animator.addMove(currentTile, targetTile);
+            animator.addMove(animateTile, targetTile);
         }
 
-        // FIXME: 7/14/17 this METHOD is working
-        // helper method - return relativelayout.param to add new tile on top of current tile
-        private RelativeLayout.LayoutParams calculateParams(Tile currentTile) {
-            int position = currentTile.position;
-            RelativeLayout.LayoutParams TileParams =
-                    new RelativeLayout.LayoutParams(tileDimension, tileDimension);
-            int xPosition = position % 10;
-            int yPosition = position / 10;
-            int leftMargin = (xPosition == 0) ? margin : margin / 2;
-            int topMargin = (yPosition == 0) ? margin : margin / 2;
-            int rightMargin = margin / 2;
-            int btmMargin = margin / 2;
-            TileParams.setMargins(leftMargin, topMargin, rightMargin, btmMargin);
-            if (yPosition != 0) {
-                TileParams.addRule(RelativeLayout.BELOW, tileArray[yPosition - 1][xPosition].getId());
-            }
-            if (xPosition != 0) {
-                TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[yPosition][xPosition - 1].getId());
-            }
-            return TileParams;
-        }
 
         private class Animator {
-            private List<AnimatorSet> moveSet;
+            private List<ObjectAnimator> moveSet;
             private List<AnimatorSet> mergeSet;
             private int scaleDuration;
-//            private ObjectAnimator newTile;
+
+            private ObjectAnimator newTile;
 
             private Animator() {
                 moveSet = new ArrayList<>();
                 mergeSet = new ArrayList<>();
-                scaleDuration = 500;
+                scaleDuration = 400;
 //                newTile = new ObjectAnimator();
             }
 
@@ -262,11 +246,52 @@ public class GameFragment extends Fragment {
                         1f, 1.1f, 1f);
                 scaleWidth.setDuration(scaleDuration);
                 scaleAnimator.play(scaleHeight).with(scaleWidth);
-                mergeSet.add(scaleAnimator);
+                scaleAnimator.start();
+//                mergeSet.add(scaleAnimator);
             }
 
-            public void addMove(Tile moveTile, Tile targetTile) {
+            // FIXME: 7/14/17 - horizontal move now
+            public void addMove(final Tile moveTile, final Tile targetTile) {
+                final int value = moveTile.getValue();
+                float tileTravel = targetTile.position - moveTile.position;
+                float distanceTravel = (margin + tileDimension) * (tileTravel) * 49 / 50;
+                ObjectAnimator move = ObjectAnimator.ofFloat(moveTile, "translationX", distanceTravel);
+                long duration = 75 * (long) Math.abs(tileTravel);
+                move.setDuration(duration);
+                move.addListener(new android.animation.Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(android.animation.Animator animator) {
 
+                    }
+
+                    @Override
+                    public void onAnimationEnd(android.animation.Animator animator) {
+                        targetTile.setValue(value);
+                        ((ViewManager) moveTile.getParent()).removeView(moveTile);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(android.animation.Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(android.animation.Animator animator) {
+
+                    }
+                });
+                moveSet.add(move);
+            }
+
+            public void move() {
+                int size = moveSet.size();
+                Log.i("size", "" + size);
+                AnimatorSet animSet = new AnimatorSet();
+                ObjectAnimator anim = moveSet.get(0);
+                for (int i = 1; i < size; i = i + 1) {
+                    animSet.play(anim).with(moveSet.get(i));
+                }
+                animSet.start();
             }
 
         }
