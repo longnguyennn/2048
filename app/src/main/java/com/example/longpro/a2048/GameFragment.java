@@ -149,10 +149,6 @@ public class GameFragment extends Fragment {
         // FIXME: 7/14/17 - TESTING - this needs to be fixed later 
         private void swipeHandler() {
             swipeLeft();
-//            if (animator.moveSet.size() != 0) {
-//                animator.move();
-//            }
-            animator.moveSet.clear();
             setRandomTile();
         }
 
@@ -168,14 +164,14 @@ public class GameFragment extends Fragment {
                         int prevValue = row[prevIndex].getValue();
                         if (prevValue != 0) {
                             if (prevValue == currentValue) {
-                                if (prevIndex < currentIndex - 1) {  }
-
+                                animator.merge(currentTile, row[prevIndex]);
+                            } else {
+                                animator.move(currentTile, row[prevIndex + 1]);
                             }
-                            animator.addMove(row[currentIndex], row[prevIndex + 1]);
                             break;
                         }
                         else if (prevIndex == 0) {
-                            animator.addMove(row[currentIndex], row[prevIndex]);
+                            animator.move(row[currentIndex], row[prevIndex]);
                             break;
                         }
                         prevIndex = prevIndex - 1;
@@ -184,53 +180,67 @@ public class GameFragment extends Fragment {
             }
         }
 
-
-
-
-
-
-        // FIXME: 7/14/17 might be added to moveTile as a feature
-        // Merge current tile with another tile
-        private void mergeTile(Tile currentTile, Tile targetTile) {
-            int value = currentTile.getValue();
-            int newValue = 2 * value;
-            targetTile.setValue(newValue);
-            currentTile.setValue(0);
-            // add a merge object animator here .. i.e: addMerge
-            animator.addMerge(targetTile);
-        }
-
-
         private class Animator {
-            private List<ObjectAnimator> moveSet;
             private List<AnimatorSet> mergeSet;
             private int scaleDuration;
 
             private ObjectAnimator newTile;
 
             private Animator() {
-                moveSet = new ArrayList<>();
                 mergeSet = new ArrayList<>();
                 scaleDuration = 400;
 //                newTile = new ObjectAnimator();
             }
 
-            public void addMerge(Tile tile) {
-                AnimatorSet scaleAnimator = new AnimatorSet();
-                ObjectAnimator scaleHeight = ObjectAnimator.ofFloat(tile, "scaleY",
+            public void merge(final Tile currentTile, final Tile targetTile) {
+                AnimatorSet mergeAnimator = new AnimatorSet();
+                final Tile animateTile = new Tile(context, targetTile.position);
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
+                // doesn't need set background resource here
+                animateTile.setValue(currentTile.getValue());
+                gameContainer.addView(animateTile, params);
+
+                long tileTravel = Math.abs(currentTile.position - targetTile.position);
+                float distanceTravel = currentTile.getX() - targetTile.getX();
+                long duration = 75 * tileTravel;
+                ObjectAnimator moveAnimator = ObjectAnimator.ofFloat(animateTile, "translationX", distanceTravel);
+                moveAnimator.setDuration(duration);
+                moveAnimator.addListener(new android.animation.Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(android.animation.Animator animator) {
+                        currentTile.setValue(0);
+                    }
+
+                    @Override
+                    public void onAnimationEnd(android.animation.Animator animator) {
+                        targetTile.setValue(2 * targetTile.getValue());
+                        ((ViewManager) animateTile.getParent()).removeView(animateTile);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(android.animation.Animator animator) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(android.animation.Animator animator) {
+
+                    }
+                });
+
+                ObjectAnimator scaleHeight = ObjectAnimator.ofFloat(targetTile, "scaleY",
                         1f, 1.1f, 1f);
                 scaleHeight.setDuration(scaleDuration);
 
-                ObjectAnimator scaleWidth = ObjectAnimator.ofFloat(tile, "scaleX",
+                ObjectAnimator scaleWidth = ObjectAnimator.ofFloat(targetTile, "scaleX",
                         1f, 1.1f, 1f);
                 scaleWidth.setDuration(scaleDuration);
-                scaleAnimator.play(scaleHeight).with(scaleWidth);
-                scaleAnimator.start();
-//                mergeSet.add(scaleAnimator);
+                mergeAnimator.play(scaleHeight).with(scaleWidth).after(moveAnimator);
+                mergeAnimator.start();
             }
 
             // FIXME: 7/14/17 - horizontal move only at the moment
-            public void addMove(final Tile currentTile, final Tile targetTile) {
+            public void move(final Tile currentTile, final Tile targetTile) {
                 final int value = currentTile.getValue();
                 int currentPosition = currentTile.position;
                 int targetPosition = targetTile.position;
@@ -241,10 +251,10 @@ public class GameFragment extends Fragment {
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
                 gameContainer.addView(animateTile, params);
 
-                float tileTravel = targetPosition - currentPosition;
+                long tileTravel = Math.abs(targetPosition - currentPosition);
                 float distanceTravel = targetTile.getX() - currentTile.getX();
                 ObjectAnimator move = ObjectAnimator.ofFloat(animateTile, "translationX", distanceTravel);
-                long duration = 75 * (long) Math.abs(tileTravel);
+                long duration = 75 * tileTravel;
                 move.setDuration(duration);
                 move.addListener(new android.animation.Animator.AnimatorListener() {
                     @Override
@@ -269,23 +279,7 @@ public class GameFragment extends Fragment {
 
                     }
                 });
-                // FIXME: 7/15/17
-//                moveSet.add(move);
                 move.start();
-            }
-
-            public void move() {
-                // only call move when moveSet isn't empty -- need condition checking when call
-                int size = moveSet.size();
-                AnimatorSet animSet = new AnimatorSet();
-                ObjectAnimator anim = moveSet.get(0);
-                animSet.play(anim);
-                for (int i = 1; i < size; i = i + 1) {
-                    animSet.play(anim).with(moveSet.get(i));
-                }
-                animSet.start();
-                // clear ArrayList after move
-                moveSet.clear();
             }
 
         }
