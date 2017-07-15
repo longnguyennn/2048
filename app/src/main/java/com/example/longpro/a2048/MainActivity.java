@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (board.hasChanged) {
-                board.setNewNumber();
+                board.setRandomTile();
 //                renderBoard();
             }
 //             check trackChange's functionality

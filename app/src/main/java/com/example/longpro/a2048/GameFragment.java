@@ -17,6 +17,7 @@ import android.view.ViewManager;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -58,6 +59,7 @@ public class GameFragment extends Fragment {
         game_container.post(new Runnable() {
             @Override
             public void run() {
+                Log.i("Executing", "runnable");
                 int gcDimension = game_container.getHeight();
                 margin = gcDimension / 30;
                 int btwMargin = margin / 2;
@@ -65,7 +67,7 @@ public class GameFragment extends Fragment {
 
 
 
-                // FIXME: 7/10/17 - need to set view's reference to null onDestroy
+                // FIXME: 7/10/17 - rewrite this
                 // initialize an array of tiles
                 for (int i = 0; i < 4; i = i + 1) {
                     if ( i == 0 ) {
@@ -123,67 +125,58 @@ public class GameFragment extends Fragment {
 
     private class Game {
         private RelativeLayout gameContainer;
+        private Animator animator;
 
         private Game(RelativeLayout gameContainer) {
             this.gameContainer = gameContainer;
-            setNewNumber();
-            setNewNumber();
+            setRandomTile();
+            setRandomTile();
+            animator = new Animator();
         }
 
-        private void setNewNumber() {
+        private void setRandomTile() {
             int i = new Random().nextInt(4);
             int j = new Random().nextInt(4);
             int tileValue = tileArray[i][j].getValue();
             while (tileValue != 0) {
                 i = new Random().nextInt(4);
                 j = new Random().nextInt(4);
+                tileValue = tileArray[i][j].getValue();
             }
             tileArray[i][j].setValue(2);
         }
 
         // FIXME: 7/14/17 - TESTING - this needs to be fixed later 
         private void swipeHandler() {
-            Animator animator = new Animator();
-//            animator.addMerge(tileArray[0][0]);
-
-            swipeLeft(animator);
-            if (animator.moveSet.size() > 0) {
-                animator.move();
-                setNewNumber();
-            }
+            swipeLeft();
+//            if (animator.moveSet.size() != 0) {
+//                animator.move();
+//            }
+            animator.moveSet.clear();
+            setRandomTile();
         }
 
-        // FIXME: 7/14/17 swipeLeft is broken
-        private void swipeLeft(Animator animator) {
-            int arraySize = 4;
-            for (int i = 0; i < arraySize; i = i + 1) {
+        private void swipeLeft() {
+            for (int i = 0; i < 4; i = i + 1) {
                 Tile[] row = tileArray[i];
-                for (int j = 1; j < arraySize; j = j + 1) {
-                    Tile currentTile = row[j];
+                for (int currentIndex = 1; currentIndex < 4; currentIndex = currentIndex + 1) {
+                    Tile currentTile = row[currentIndex];
                     int currentValue = currentTile.getValue();
-                    if (currentValue == 0) {
-                        continue;
-                    }
-                    int prevIndex = j - 1;
+                    if (currentValue == 0) { continue; }
+                    int prevIndex = currentIndex - 1;
                     while (prevIndex > -1) {
-                        Tile prevTile = row[prevIndex];
-                        int prevValue = prevTile.getValue();
+                        int prevValue = row[prevIndex].getValue();
                         if (prevValue != 0) {
-                            // move current tile to the tile next to tile at prevIndex
-                            Tile targetTile = row[prevIndex + 1];
-                            moveTile(currentTile, targetTile, animator);
-                            // FIXME: 7/14/17 need fix later
-//                            if (prevValue == targetTile.getValue()) {
-//                                mergeTile(targetTile, prevTile, animator);
-//                            }
-                            break;
-                        } else {
-                            // move to prevIndex because there's no more to go
-                            if (prevIndex == 0) {
-                                Tile targetTile = row[prevIndex];
-                                moveTile(currentTile, targetTile, animator);
-                                break;
+                            if (prevValue == currentValue) {
+                                if (prevIndex < currentIndex - 1) {  }
+
                             }
+                            animator.addMove(row[currentIndex], row[prevIndex + 1]);
+                            break;
+                        }
+                        else if (prevIndex == 0) {
+                            animator.addMove(row[currentIndex], row[prevIndex]);
+                            break;
                         }
                         prevIndex = prevIndex - 1;
                     }
@@ -191,34 +184,20 @@ public class GameFragment extends Fragment {
             }
         }
 
+
+
+
+
+
         // FIXME: 7/14/17 might be added to moveTile as a feature
         // Merge current tile with another tile
-        private void mergeTile(Tile currentTile, Tile targetTile, Animator animator) {
+        private void mergeTile(Tile currentTile, Tile targetTile) {
             int value = currentTile.getValue();
             int newValue = 2 * value;
             targetTile.setValue(newValue);
             currentTile.setValue(0);
             // add a merge object animator here .. i.e: addMerge
             animator.addMerge(targetTile);
-        }
-
-        // Move current tile to target tile
-        private void moveTile(Tile currentTile, Tile targetTile, Animator animator) {
-            // clone currentTile on top of currentTile and call addMove on it
-
-            int value = currentTile.getValue();
-            int position = currentTile.position;
-            Tile animateTile = new Tile(context, position);
-            // FIXME: 7/15/17 testing - change background later
-            animateTile.setValue(value);
-            animateTile.setBackgroundResource(R.drawable.test);
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
-            gameContainer.addView(animateTile, params);
-//            set targetTile value after animation
-//            targetTile.setValue(value);
-            currentTile.setValue(0);
-            // add a move object animator here .. i.e: addMove
-            animator.addMove(animateTile, targetTile);
         }
 
 
@@ -250,24 +229,34 @@ public class GameFragment extends Fragment {
 //                mergeSet.add(scaleAnimator);
             }
 
-            // FIXME: 7/14/17 - horizontal move now
-            public void addMove(final Tile moveTile, final Tile targetTile) {
-                final int value = moveTile.getValue();
-                float tileTravel = targetTile.position - moveTile.position;
-                float distanceTravel = (margin + tileDimension) * (tileTravel) * 49 / 50;
-                ObjectAnimator move = ObjectAnimator.ofFloat(moveTile, "translationX", distanceTravel);
+            // FIXME: 7/14/17 - horizontal move only at the moment
+            public void addMove(final Tile currentTile, final Tile targetTile) {
+                final int value = currentTile.getValue();
+                int currentPosition = currentTile.position;
+                int targetPosition = targetTile.position;
+                // doesn't really matter which position here
+                final Tile animateTile = new Tile(context, targetPosition);
+                animateTile.setValue(value);
+                animateTile.setBackgroundResource(R.drawable.test);
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
+                gameContainer.addView(animateTile, params);
+
+                float tileTravel = targetPosition - currentPosition;
+                float distanceTravel = targetTile.getX() - currentTile.getX();
+                ObjectAnimator move = ObjectAnimator.ofFloat(animateTile, "translationX", distanceTravel);
                 long duration = 75 * (long) Math.abs(tileTravel);
                 move.setDuration(duration);
                 move.addListener(new android.animation.Animator.AnimatorListener() {
                     @Override
                     public void onAnimationStart(android.animation.Animator animator) {
-
+                        currentTile.setValue(0);
                     }
 
                     @Override
                     public void onAnimationEnd(android.animation.Animator animator) {
                         targetTile.setValue(value);
-                        ((ViewManager) moveTile.getParent()).removeView(moveTile);
+                        ((ViewManager) currentTile.getParent()).removeView(animateTile);
+//                        animateTile = null;
                     }
 
                     @Override
@@ -280,18 +269,23 @@ public class GameFragment extends Fragment {
 
                     }
                 });
-                moveSet.add(move);
+                // FIXME: 7/15/17
+//                moveSet.add(move);
+                move.start();
             }
 
             public void move() {
+                // only call move when moveSet isn't empty -- need condition checking when call
                 int size = moveSet.size();
-                Log.i("size", "" + size);
                 AnimatorSet animSet = new AnimatorSet();
                 ObjectAnimator anim = moveSet.get(0);
+                animSet.play(anim);
                 for (int i = 1; i < size; i = i + 1) {
                     animSet.play(anim).with(moveSet.get(i));
                 }
                 animSet.start();
+                // clear ArrayList after move
+                moveSet.clear();
             }
 
         }
@@ -374,7 +368,7 @@ public class GameFragment extends Fragment {
 //            }
 //
 //            if (board.hasChanged) {
-//                board.setNewNumber();
+//                board.setRandomTile();
 ////                renderBoard();
 //            }
 ////             check trackChange's functionality

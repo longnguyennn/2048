@@ -19,11 +19,11 @@ public class Board {
 
     public Board() {
         array = new int[4][4];
-        setNewNumber();
-        setNewNumber();
+        setRandomTile();
+        setRandomTile();
     }
 
-    public void setNewNumber() {
+    public void setRandomTile() {
         int i = new Random().nextInt(4);
         int j = new Random().nextInt(4);
         while (array[i][j] != 0) {
