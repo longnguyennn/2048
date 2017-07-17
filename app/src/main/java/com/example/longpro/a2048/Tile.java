@@ -1,7 +1,8 @@
 package com.example.longpro.a2048;
 
 import android.content.Context;
-import android.util.AttributeSet;
+import android.graphics.Typeface;
+import android.view.Gravity;
 
 /**
  * Created by longpro on 7/8/17.
@@ -26,10 +27,19 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             0xedc22e,
     };
 
+    public Tile(Context context) {
+        super(context);
+        this.value = 0;
+        this.position = 0;
+        this.setGravity(Gravity.CENTER);
+    }
+
     public Tile(Context context, int position) {
         super(context);
         this.value = 0;
         this.position = position;
+        this.setGravity(Gravity.CENTER);
+        this.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
 //        setTileBackground();
     }
 
@@ -37,36 +47,27 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         return this.value;
     }
 
-    // FIXME: 7/13/17 This method should be fixed
+    // FIXME: 7/13/17 This method should be fixed - need to move setBackgroundResource in here
     public void setValue(int input) {
         this.value = input;
-        this.setText(Integer.toString(this.value));
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // this might not be needed
-    private void setTileBackground() {
-        setBackgroundResource(R.drawable.component);
-        setText(Integer.toString(this.value));
-        if (this.value == 0) setBackgroundColor(this.TILE_COLOR[0]);
+        if (this.value == 0) { this.setText(""); }
         else {
-            int index = (int) Math.log(this.value) / (int) Math.log(2);
-            setBackgroundColor(this.TILE_COLOR[index]);
+            if (input > 1000) {
+                this.setTextSize(28);
+            }
+            else if (input > 100) {
+                this.setTextSize(30);
+            }
+            else if (input > 10) {
+                this.setTextSize(34);
+            }
+            else {
+                this.setTextSize(36);
+            }
+
+            this.setText(Integer.toString(this.value));
         }
+
     }
 
 }

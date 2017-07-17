@@ -1,6 +1,5 @@
 package com.example.longpro.a2048;
 
-import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Fragment;
@@ -16,9 +15,7 @@ import android.view.ViewGroup;
 import android.view.ViewManager;
 import android.widget.RelativeLayout;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 
 
@@ -59,7 +56,6 @@ public class GameFragment extends Fragment {
         game_container.post(new Runnable() {
             @Override
             public void run() {
-                Log.i("Executing", "runnable");
                 int gcDimension = game_container.getHeight();
                 margin = gcDimension / 30;
                 int btwMargin = margin / 2;
@@ -76,7 +72,7 @@ public class GameFragment extends Fragment {
                                     new RelativeLayout.LayoutParams(tileDimension, tileDimension);
                             int position = 10 * i + j;
                             Tile tile = new Tile(context, position);
-                            // FIXME: 7/13/17 - doesn't need setBackgroundResource here ....
+                            // FIXME: 7/17/17 - don't need setBackgroundResource here
                             tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
@@ -126,36 +122,43 @@ public class GameFragment extends Fragment {
     private class Game {
         private RelativeLayout gameContainer;
         private Animator animator;
+        private boolean hasChanged;
+        // array used for the game logic (use tileArray for view animation)
+        private int[][] valueArray;
 
         private Game(RelativeLayout gameContainer) {
             this.gameContainer = gameContainer;
             animator = new Animator();
-            int i = new Random().nextInt(4);
-            int j = new Random().nextInt(4);
-            int tileValue = tileArray[i][j].getValue();
+            this.valueArray = new int[4][4];
             for (int counter = 0; counter < 2; counter = counter + 1) {
+                int i = new Random().nextInt(4);
+                int j = new Random().nextInt(4);
+                int tileValue = tileArray[i][j].getValue();
                 while (tileValue != 0) {
                     i = new Random().nextInt(4);
                     j = new Random().nextInt(4);
                     tileValue = tileArray[i][j].getValue();
                 }
                 tileArray[i][j].setValue(2);
+                // set valueArray inside Game instead of setValueArray
+                this.valueArray[i][j] = 2;
             }
 
         }
 
+        // use runtime value from valueArray
         private void setRandomTile() {
             int i = new Random().nextInt(4);
             int j = new Random().nextInt(4);
-            int tileValue = tileArray[i][j].getValue();
+            int tileValue = valueArray[i][j];
             while (tileValue != 0) {
                 i = new Random().nextInt(4);
                 j = new Random().nextInt(4);
-                tileValue = tileArray[i][j].getValue();
+                tileValue = valueArray[i][j];
             }
 //            set tile value in setNewTile
-//            tileArray[i][j].setValue(2);
             animator.setNewTile(tileArray[i][j]);
+            valueArray[i][j] = 2;
         }
 
         // FIXME: 7/14/17 - TESTING - this needs to be fixed later 
@@ -181,27 +184,46 @@ public class GameFragment extends Fragment {
 
                 }
             }
-            setRandomTile();
+            // only set new Tile when game state is changed
+            if (this.hasChanged) {
+                setRandomTile();
+                this.hasChanged = false;
+            }
+
         }
 
+
+        // FIXME: 7/17/17 - need test
         private void swipeLeft() {
             for (int i = 0; i < 4; i = i + 1) {
                 Tile[] row = tileArray[i];
+                int[] valueRow = valueArray[i];
                 for (int currentIndex = 1; currentIndex < 4; currentIndex = currentIndex + 1) {
                     Tile currentTile = row[currentIndex];
-                    int currentValue = currentTile.getValue();
+//                    int currentValue = currentTile.getValue();
+                    int currentValue = valueRow[currentIndex];
                     if (currentValue == 0) { continue; }
                     int targetIndex = currentIndex - 1;
                     while (targetIndex > -1) {
-                        int targetValue = row[targetIndex].getValue();
+//                        compare value using valueArray instead of tileArray
+//                        int targetValue = row[targetIndex].getValue();
+                        int targetValue = valueRow[targetIndex];
                         if (targetValue != 0) {
                             if (targetValue == currentValue) {
+                                // FIXME: 7/17/17 - need test
                                 animator.merge(currentTile, row[targetIndex], "H");
+                                valueRow[targetIndex] = 2 * valueRow[targetIndex];
+                                valueRow[currentIndex] = 0;
+                                // add hasChanged
+                                this.hasChanged = true;
                             } else {
                                 // only move if targetTile is not currentTile
                                 if (currentIndex != (targetIndex + 1)) {
                                     Tile targetTile = row[targetIndex + 1];
                                     animator.move(currentTile, targetTile, "H");
+                                    valueRow[targetIndex + 1] = currentValue;
+                                    valueRow[currentIndex] = 0;
+                                    this.hasChanged = true;
                                 }
                             }
                             break;
@@ -209,6 +231,9 @@ public class GameFragment extends Fragment {
                         // if it get's to index 0 then move the tile to position 0
                         else if (targetIndex == 0) {
                             animator.move(row[currentIndex], row[targetIndex], "H");
+                            valueRow[targetIndex] = currentValue;
+                            valueRow[currentIndex] = 0;
+                            this.hasChanged = true;
                             break;
                         }
                         targetIndex = targetIndex - 1;
@@ -220,28 +245,41 @@ public class GameFragment extends Fragment {
         private void swipeRight() {
             for (int i = 0; i < 4; i = i + 1) {
                 Tile[] row = tileArray[i];
+                int[] valueRow = valueArray[i];
                 for (int currentIndex = 2; currentIndex > -1; currentIndex = currentIndex - 1) {
                     Tile currentTile = row[currentIndex];
-                    int currentValue = currentTile.getValue();
+                    // FIXME: 7/17/17 - need test
+//                    int currentValue = currentTile.getValue();
+                    int currentValue = valueRow[currentIndex];
                     if (currentValue == 0) { continue; }
                     int targetIndex = currentIndex + 1;
                     while (targetIndex < 4) {
-                        int targetValue = row[targetIndex].getValue();
+//                        int targetValue = row[targetIndex].getValue();
+                        int targetValue = valueRow[targetIndex];
                         if (targetValue != 0) {
                             if (targetValue == currentValue) {
                                 animator.merge(currentTile, row[targetIndex], "H");
+                                valueRow[targetIndex] = 2 * valueRow[targetIndex];
+                                valueRow[currentIndex] = 0;
+                                this.hasChanged = true;
                             }
                             else {
                                 // only move if targetTile is not currentTile
                                 if (currentIndex != (targetIndex - 1)) {
                                     Tile targetTile = row[targetIndex - 1];
                                     animator.move(currentTile, targetTile, "H");
+                                    valueRow[targetIndex - 1] = currentValue;
+                                    valueRow[currentIndex] = 0;
+                                    this.hasChanged = true;
                                 }
                             }
                             break;
                         }
                         else if (targetIndex == 3) {
                             animator.move(row[currentIndex], row[targetIndex], "H");
+                            valueRow[targetIndex] = currentValue;
+                            valueRow[currentIndex] = 0;
+                            this.hasChanged = true;
                             break;
                         }
                         targetIndex = targetIndex + 1;
@@ -254,26 +292,38 @@ public class GameFragment extends Fragment {
             for (int i = 0; i < 4; i = i + 1) {
                 for (int currentIndex = 1; currentIndex < 4; currentIndex = currentIndex + 1) {
                     Tile currentTile = tileArray[currentIndex][i];
-                    int currentValue = currentTile.getValue();
+                    // FIXME: 7/17/17 - need test
+//                    int currentValue = currentTile.getValue();
+                    int currentValue = valueArray[currentIndex][i];
                     if (currentValue == 0) { continue; }
                     int targetIndex = currentIndex - 1;
                     while (targetIndex > -1) {
-                        int targetValue = tileArray[targetIndex][i].getValue();
+//                        int targetValue = tileArray[targetIndex][i].getValue();
+                        int targetValue = valueArray[targetIndex][i];
                         if (targetValue != 0) {
                             if (targetValue == currentValue) {
                                 animator.merge(currentTile, tileArray[targetIndex][i], "V");
+                                valueArray[targetIndex][i] = 2 * valueArray[targetIndex][i];
+                                valueArray[currentIndex][i] = 0;
+                                this.hasChanged = true;
                             }
                             else {
                                 // only move if targetTile is not currentTile
                                 if (currentIndex != (targetIndex + 1)) {
                                     Tile targetTile = tileArray[targetIndex + 1][i];
                                     animator.move(currentTile, targetTile, "V");
+                                    valueArray[targetIndex + 1][i] = currentValue;
+                                    valueArray[currentIndex][i] = 0;
+                                    this.hasChanged = true;
                                 }
                             }
                             break;
                         }
                         else if (targetIndex == 0) {
                             animator.move(currentTile, tileArray[targetIndex][i], "V");
+                            valueArray[targetIndex][i] = currentValue;
+                            valueArray[currentIndex][i] = 0;
+                            this.hasChanged = true;
                             break;
                         }
                         targetIndex = targetIndex - 1;
@@ -286,25 +336,36 @@ public class GameFragment extends Fragment {
             for (int i = 0; i < 4; i = i + 1) {
                 for (int currentIndex = 2; currentIndex > -1; currentIndex = currentIndex - 1) {
                     Tile currentTile = tileArray[currentIndex][i];
-                    int currentValue = currentTile.getValue();
+//                    int currentValue = currentTile.getValue();
+                    int currentValue = valueArray[currentIndex][i];
                     if (currentValue == 0) { continue; }
                     int targetIndex = currentIndex + 1;
                     while (targetIndex < 4) {
-                        int targetValue = tileArray[targetIndex][i].getValue();
+//                        int targetValue = tileArray[targetIndex][i].getValue();
+                        int targetValue = valueArray[targetIndex][i];
                         if (targetValue != 0) {
                             if (targetValue == currentValue) {
                                 animator.merge(currentTile, tileArray[targetIndex][i], "V");
+                                valueArray[targetIndex][i] =  2 * valueArray[targetIndex][i];
+                                valueArray[currentIndex][i] = 0;
+                                this.hasChanged = true;
                             }
                             else {
                                 if (targetIndex != (currentIndex + 1)) {
                                     Tile targetTile = tileArray[targetIndex - 1][i];
                                     animator.move(currentTile, targetTile, "V");
+                                    valueArray[targetIndex - 1][i] = currentValue;
+                                    valueArray[currentIndex][i] = 0;
+                                    this.hasChanged = true;
                                 }
                             }
                             break;
                         }
                         else if (targetIndex == 3) {
                             animator.move(currentTile, tileArray[targetIndex][i], "V");
+                            valueArray[targetIndex][i] = currentValue;
+                            valueArray[currentIndex][i] = 0;
+                            this.hasChanged = true;
                             break;
                         }
                         targetIndex = targetIndex + 1;
@@ -317,15 +378,18 @@ public class GameFragment extends Fragment {
 
         private class Animator {
             private int scaleDuration;
+            private long moveDuration;
 
 
             private Animator() {
-                scaleDuration = 400;
+                this.scaleDuration = 400;
+                this.moveDuration = 0;
             }
 
-            public void merge(final Tile currentTile, final Tile targetTile, String orientation) {
+            private void merge(final Tile currentTile, final Tile targetTile, String orientation) {
                 AnimatorSet mergeAnimator = new AnimatorSet();
-                final Tile animateTile = new Tile(context, targetTile.position);
+//                final Tile animateTile = new Tile(context, targetTile.position);
+                final Tile animateTile = new Tile(context);
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
                 // set background resource here for testing purpose
                 animateTile.setValue(currentTile.getValue());
@@ -348,6 +412,8 @@ public class GameFragment extends Fragment {
                     moveAnimator = ObjectAnimator.ofFloat(animateTile, "translationY", distanceTravel);
                 }
                 long duration = 100 * Math.abs(tileTravel);
+                // get the move duration for setNewTile's delay
+                if (duration > this.moveDuration) { this.moveDuration = duration; }
                 moveAnimator.setDuration(duration);
                 // add listener on mergeAnimator ?
                 moveAnimator.addListener(new android.animation.Animator.AnimatorListener() {
@@ -383,13 +449,14 @@ public class GameFragment extends Fragment {
                 mergeAnimator.start();
             }
 
-            // FIXME: 7/14/17 - horizontal move only at the moment
-            public void move(final Tile currentTile, final Tile targetTile, String orientation) {
+            // FIXME: 7/17/17 - Should work now
+            private void move(final Tile currentTile, final Tile targetTile, String orientation) {
                 final int value = currentTile.getValue();
                 int currentPosition = currentTile.position;
                 int targetPosition = targetTile.position;
                 // doesn't really matter which position here
-                final Tile animateTile = new Tile(context, targetPosition);
+//                final Tile animateTile = new Tile(context, targetPosition);
+                final Tile animateTile = new Tile(context);
                 animateTile.setValue(value);
                 animateTile.setBackgroundResource(R.drawable.test);
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
@@ -407,6 +474,7 @@ public class GameFragment extends Fragment {
                     move = ObjectAnimator.ofFloat(animateTile, "translationY", distanceTravel);
                 }
                 long duration = 100 * tileTravel;
+                if (duration > this.moveDuration) { this.moveDuration = duration; }
                 move.setDuration(duration);
                 move.addListener(new android.animation.Animator.AnimatorListener() {
                     @Override
@@ -433,7 +501,7 @@ public class GameFragment extends Fragment {
                 move.start();
             }
 
-            public void setNewTile(final Tile targetTile) {
+            private void setNewTile(final Tile targetTile) {
                 ObjectAnimator scaleHeight = ObjectAnimator.ofFloat(targetTile, "scaleY",
                         0.5f, 1f);
                 scaleHeight.setDuration(scaleDuration/2);
@@ -464,6 +532,8 @@ public class GameFragment extends Fragment {
 
                     }
                 });
+                // wait for moves to finish
+                animatorSet.setStartDelay(this.moveDuration / 2);
                 animatorSet.start();
             }
 
@@ -502,65 +572,3 @@ public class GameFragment extends Fragment {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//        private void swipeHandler(MotionEvent event1, MotionEvent event2) {
-//            String DEBUG_TAG = "Array";
-//            int[] differences = new int[2];
-//
-//            float x_difference = Math.abs(event1.getX() - event2.getX());
-//            float y_difference = Math.abs(event1.getY() - event2.getY());
-//            if (y_difference > x_difference) {
-//                if (event1.getY() > event2.getY()) {
-//                    board.swipeUp();
-//                }
-//                else {
-//                    board.swipeDown();
-//
-//                }
-//            }
-//            else {
-//                if (event1.getX() > event2.getX()) {
-//                    board.swipeLeft();
-//                }
-//                else {
-//                    board.swipeRight();
-//
-//                }
-//            }
-//
-//            if (board.hasChanged) {
-//                board.setRandomTile();
-////                renderBoard();
-//            }
-////             check trackChange's functionality
-//            for (int a = 0; a < board.trackChanges.size(); a = a + 1) {
-//                Log.d("TRACK CHANGE SIZE", Integer.toString(board.trackChanges.size()));
-//                Log.d("TRACK CHANGES: ", Arrays.toString(board.trackChanges.get(a)));
-//            }
-//
-//            board.trackChanges.clear();
-//            board.hasChanged = false;
-//
-//
-//            // Long Nguyen - this should work
-//            for (int a = 0; a < 4; a = a + 1) {
-//                Log.d(DEBUG_TAG, Arrays.toString(board.array[a]));
-//            }
-//
-//        }
