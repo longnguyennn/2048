@@ -2,6 +2,9 @@ package com.example.longpro.a2048;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.view.Gravity;
 
 /**
@@ -40,7 +43,6 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         this.position = position;
         this.setGravity(Gravity.CENTER);
         this.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
-//        setTileBackground();
     }
 
     public int getValue() {
@@ -64,7 +66,12 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             else {
                 this.setTextSize(36);
             }
-
+            // LN
+            Drawable background = this.getBackground();
+            background.mutate();
+//            gradientDrawable.mutate();
+//            gradientDrawable.getShape();
+//            gradientDrawable.setColor(0xffffff);
             this.setText(Integer.toString(this.value));
         }
 
