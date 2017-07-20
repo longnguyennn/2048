@@ -68,7 +68,7 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
             }
             // LN
             Drawable background = this.getBackground();
-            background.mutate();
+//            background.mutate();
 //            gradientDrawable.mutate();
 //            gradientDrawable.getShape();
 //            gradientDrawable.setColor(0xffffff);
