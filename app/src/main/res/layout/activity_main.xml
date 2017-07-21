@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:id="@+id/activity_main">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -12,7 +13,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="5.25">
+        android:layout_weight="5">
         <com.example.longpro.a2048.GameContainer
             android:id="@+id/game_container"
             android:layout_width="match_parent"
@@ -20,12 +21,6 @@
             android:orientation="vertical"
             android:background="@drawable/board">
         </com.example.longpro.a2048.GameContainer>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.5">
     </LinearLayout>
 
 </LinearLayout>

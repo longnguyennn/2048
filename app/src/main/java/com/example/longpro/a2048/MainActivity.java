@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private Tile[][] tileArray;
     private Context context;
     private Game game;
-    private int margin;
+    private int tileMargin;
     private int tileDimension;
 
     @Override
@@ -57,9 +57,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 int gcDimension = game_container.getHeight();
-                margin = gcDimension / 30;
-                int btwMargin = margin / 2;
-                tileDimension = (gcDimension - (5 * margin)) / 4;
+                int gcMargin = gcDimension / 30;
+                LinearLayout.LayoutParams gcParams = (LinearLayout.LayoutParams) game_container.getLayoutParams();
+                gcParams.setMargins(gcMargin, gcMargin, gcMargin, gcMargin);
+                int actualDimension = gcDimension - 2 * gcMargin;
+                tileMargin = actualDimension / 35;
+                int btwMargin = tileMargin / 2;
+                tileDimension = (actualDimension - (5 * tileMargin)) / 4;
 
                 for (int i = 0; i < 4; i = i + 1) {
                     if ( i == 0 ) {
@@ -67,16 +71,16 @@ public class MainActivity extends AppCompatActivity {
                             RelativeLayout.LayoutParams TileParams =
                                     new RelativeLayout.LayoutParams(tileDimension, tileDimension);
                             int position = 10 * i + j;
-                            Tile tile = new Tile(context, position);
+                            Tile tile = new Tile(context, position, 0);
                             // FIXME: 7/17/17 - don't need setBackgroundResource here
-                            tile.setBackgroundResource(R.drawable.component);
+//                            tile.setBackgroundResource(R.drawable.component);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
-                                TileParams.setMargins(margin, margin, btwMargin, btwMargin);
+                                TileParams.setMargins(tileMargin, tileMargin, btwMargin, btwMargin);
                             }
 
                             else {
-                                TileParams.setMargins(btwMargin, margin, btwMargin, btwMargin);
+                                TileParams.setMargins(btwMargin, tileMargin, btwMargin, btwMargin);
                                 TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
                             }
                             game_container.addView(tile, TileParams);
@@ -89,11 +93,10 @@ public class MainActivity extends AppCompatActivity {
                             RelativeLayout.LayoutParams TileParams =
                                     new RelativeLayout.LayoutParams(tileDimension, tileDimension);
                             int position = 10 * i + j;
-                            Tile tile = new Tile(context, position);
-                            tile.setBackgroundResource(R.drawable.component);
+                            Tile tile = new Tile(context, position, 0);
                             tile.setId(Tile.generateViewId());
                             if ( j == 0 ) {
-                                TileParams.setMargins(margin, btwMargin, btwMargin, btwMargin);
+                                TileParams.setMargins(tileMargin, btwMargin, btwMargin, btwMargin);
                                 TileParams.addRule(RelativeLayout.BELOW, tileArray[i - 1][j].getId());
                             }
                             else {
@@ -145,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
                     tileValue = tileArray[i][j].getValue();
                 }
                 tileArray[i][j].setValue(2);
-                // set valueArray inside Game instead of setValueArray
                 this.valueArray[i][j] = 2;
             }
 
@@ -387,18 +389,19 @@ public class MainActivity extends AppCompatActivity {
 
 
             private Animator() {
-                this.scaleDuration = 400;
+                this.scaleDuration = 150;
                 this.moveDuration = 0;
             }
 
             private void merge(final Tile currentTile, final Tile targetTile, String orientation) {
                 AnimatorSet mergeAnimator = new AnimatorSet();
 //                final Tile animateTile = new Tile(context, targetTile.position);
-                final Tile animateTile = new Tile(context);
+                final Tile animateTile = new Tile(context, currentTile.position, currentTile.getValue());
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
                 // set background resource here for testing purpose
+//                animateTile.setValue(currentTile.getValue());
+//                animateTile.setBackgroundResource(R.drawable.test);
                 animateTile.setValue(currentTile.getValue());
-                animateTile.setBackgroundResource(R.drawable.test);
                 gameContainer.addView(animateTile, params);
                 long tileTravel;
                 float distance;
@@ -406,17 +409,17 @@ public class MainActivity extends AppCompatActivity {
                 if (orientation.equals("H")) {
                     tileTravel = currentTile.position - targetTile.position;
                     distance = targetTile.getX() - currentTile.getX();
-                    float distanceTravel = (tileTravel > 0) ? distance + margin : distance - margin;
+                    float distanceTravel = (tileTravel > 0) ? distance + tileMargin : distance - tileMargin;
                     moveAnimator = ObjectAnimator.ofFloat(animateTile, "translationX", distanceTravel);
                 }
                 else {
                     tileTravel = currentTile.position/10 - targetTile.position/10;
                     distance = targetTile.getY() - currentTile.getY();
-                    float distanceTravel = (tileTravel > 0) ? distance + margin : distance - margin;
+                    float distanceTravel = (tileTravel > 0) ? distance + tileMargin : distance - tileMargin;
 
                     moveAnimator = ObjectAnimator.ofFloat(animateTile, "translationY", distanceTravel);
                 }
-                long duration = 100 * Math.abs(tileTravel);
+                long duration = 75 * Math.abs(tileTravel);
                 // get the move duration for setNewTile's delay
                 if (duration > this.moveDuration) { this.moveDuration = duration; }
                 moveAnimator.setDuration(duration);
@@ -454,16 +457,12 @@ public class MainActivity extends AppCompatActivity {
                 mergeAnimator.start();
             }
 
-            // FIXME: 7/17/17 - Should work now
             private void move(final Tile currentTile, final Tile targetTile, String orientation) {
                 final int value = currentTile.getValue();
                 int currentPosition = currentTile.position;
                 int targetPosition = targetTile.position;
-                // doesn't really matter which position here
-//                final Tile animateTile = new Tile(context, targetPosition);
-                final Tile animateTile = new Tile(context);
+                final Tile animateTile = new Tile(context, currentPosition, value);
                 animateTile.setValue(value);
-                animateTile.setBackgroundResource(R.drawable.test);
                 RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) currentTile.getLayoutParams();
                 gameContainer.addView(animateTile, params);
                 // calculate tileTravel and distanceTravel based on given "orientation"
@@ -478,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
                 else {
                     move = ObjectAnimator.ofFloat(animateTile, "translationY", distanceTravel);
                 }
-                long duration = 100 * tileTravel;
+                long duration = 75 * tileTravel;
                 if (duration > this.moveDuration) { this.moveDuration = duration; }
                 move.setDuration(duration);
                 move.addListener(new android.animation.Animator.AnimatorListener() {
@@ -509,11 +508,11 @@ public class MainActivity extends AppCompatActivity {
             private void setNewTile(final Tile targetTile) {
                 ObjectAnimator scaleHeight = ObjectAnimator.ofFloat(targetTile, "scaleY",
                         0.5f, 1f);
-                scaleHeight.setDuration(scaleDuration/2);
+                scaleHeight.setDuration(scaleDuration);
 
                 ObjectAnimator scaleWidth = ObjectAnimator.ofFloat(targetTile, "scaleX",
                         0.5f, 1f);
-                scaleWidth.setDuration(scaleDuration/2);
+                scaleWidth.setDuration(scaleDuration);
                 AnimatorSet animatorSet = new AnimatorSet();
                 animatorSet.play(scaleHeight).with(scaleWidth);
                 animatorSet.addListener(new android.animation.Animator.AnimatorListener() {
@@ -538,7 +537,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
                 // wait for moves to finish
-                animatorSet.setStartDelay(this.moveDuration / 2);
+                animatorSet.setStartDelay(this.moveDuration/2);
                 animatorSet.start();
             }
 
