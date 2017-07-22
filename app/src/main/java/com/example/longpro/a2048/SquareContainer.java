@@ -7,21 +7,19 @@ import android.view.MotionEvent;
 import android.widget.RelativeLayout;
 
 /**
- * Created by longpro on 6/20/17.
+ * Created by longpro on 7/21/17.
  */
 
-public class GameContainer extends RelativeLayout {
-
-
-    public GameContainer(Context context) {
+public class SquareContainer extends RelativeLayout {
+    public SquareContainer(Context context) {
         super(context);
     }
 
-    public GameContainer(Context context, @Nullable AttributeSet attrs) {
+    public SquareContainer(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public GameContainer(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public SquareContainer(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 

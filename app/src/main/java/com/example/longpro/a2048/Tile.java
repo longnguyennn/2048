@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.util.TypedValue;
 import android.view.Gravity;
 /**
  * Created by longpro on 7/8/17.
@@ -51,7 +52,7 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
         }
         else {
             int index = (int) (Math.log(this.value) / Math.log(2));;
-            this.setTextSize((float) TILE_PROPERTY[index][0]);
+            this.setTextSize(TypedValue.COMPLEX_UNIT_SP, (float) TILE_PROPERTY[index][0]);
             this.setText(Integer.toString(this.value));
             this.setTextColor(TILE_PROPERTY[index][2]);
             background.setColor(TILE_PROPERTY[index][1]);
