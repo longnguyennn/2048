@@ -3,16 +3,14 @@ package com.example.longpro.a2048;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.graphics.Typeface;
-import android.graphics.drawable.ShapeDrawable;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.GestureDetector;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -26,6 +24,7 @@ import org.w3c.dom.Text;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Stack;
 
 
 /**
@@ -42,12 +41,15 @@ public class MainActivity extends AppCompatActivity {
     private int tileMargin;
     private int tileDimension;
     private CurrentScore currentScore;
+    private SizedStack<String> moveHistory;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // limit the stack size to 10 moves
+        moveHistory = new SizedStack<>(10);
         tileArray = new Tile[4][4];
         context = this;
         final RelativeLayout game_container = (RelativeLayout) findViewById(R.id.game_container);
@@ -83,17 +85,48 @@ public class MainActivity extends AppCompatActivity {
                 game_header.addView(paragraph, pParams);
                 // add currentScore
                 currentScore = new CurrentScore(context);
-                int scoreHeight = layoutHeight / 2;
+                int scoreHeight = logoDimension * 7 / 12;
                 int scoreWidth = (layoutWidth - 4 * layoutMargin - logoDimension) / 2;
                 RelativeLayout.LayoutParams csParams = new RelativeLayout.LayoutParams(scoreWidth, scoreHeight);
                 csParams.addRule(RelativeLayout.RIGHT_OF, logo.getId());
-                csParams.setMargins(layoutMargin, 0, layoutMargin, 0);
+                csParams.setMargins(layoutMargin, 0, layoutMargin, layoutMargin / 2);
                 game_header.addView(currentScore, csParams);
                 // add highScore here...
                 CurrentScore highScore = new CurrentScore(context);
                 RelativeLayout.LayoutParams hsParams = new RelativeLayout.LayoutParams(scoreWidth, scoreHeight);
                 hsParams.addRule(RelativeLayout.RIGHT_OF, currentScore.getId());
+                hsParams.setMargins(0, 0, 0, layoutMargin * 2 / 3);
                 game_header.addView(highScore, hsParams);
+                // add a square undoButton
+                // add onTouchListener
+                UndoButton undoButton = new UndoButton(context, game_header);
+                int undoDimension = logoDimension - scoreHeight - layoutMargin * 2 / 3;
+                RelativeLayout.LayoutParams undoParams = new RelativeLayout.LayoutParams(undoDimension, undoDimension);
+                undoParams.addRule(RelativeLayout.BELOW, highScore.getId());
+                undoParams.addRule(RelativeLayout.ALIGN_RIGHT, highScore.getId());
+                // this is for testing purpose
+                GradientDrawable background = new GradientDrawable();
+                background.setShape(GradientDrawable.RECTANGLE);
+                background.setCornerRadius(5);
+                int bgColor = Color.argb(150, 219, 219, 15);
+                background.setColor(bgColor);
+                undoButton.setBackground(background);
+                undoButton.setId(View.generateViewId());
+                // need to set layoutMargin * 2 / 3 to a variable
+                undoParams.setMargins(layoutMargin * 2 / 3, 0, 0, 0);
+                // maybe setMargin here ...
+                game_header.addView(undoButton, undoParams);
+
+                // add another square button here ... modify later
+                TextView button = new TextView(context);
+                RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(undoDimension, undoDimension);
+                buttonParams.addRule(RelativeLayout.BELOW, highScore.getId());
+                buttonParams.addRule(RelativeLayout.LEFT_OF, undoButton.getId());
+                button.setBackground(background);
+                game_header.addView(button, buttonParams);
+
+
+
             }
         });
 
@@ -211,35 +244,40 @@ public class MainActivity extends AppCompatActivity {
                 j = new Random().nextInt(4);
                 tileValue = valueArray[i][j];
             }
-//            set tile value pseudo-randomly (80% 2 / 20% 4)
-            int randomValue = new Random().nextInt(5);
-            int setValue = (randomValue < 4) ? 2 : 4;
+//            set tile value pseudo-randomly
+            int randomValue = new Random().nextInt(6);
+            int setValue = (randomValue < 5) ? 2 : 4;
             animator.setNewTile(tileArray[i][j], setValue);
             valueArray[i][j] = setValue;
         }
 
-        // FIXME: 7/14/17 - TESTING - this needs to be fixed later
+
         private void swipeHandler(MotionEvent event1, MotionEvent event2) {
+            // set increaseScore to 0 at the beginning of each swipe
             increaseScore = 0;
             float x_difference = Math.abs(event1.getX() - event2.getX());
             float y_difference = Math.abs(event1.getY() - event2.getY());
+            // call swipeUp/Down/Left/Right according to MotionEvent params
+            // and push move to moveHistory stack
             if (y_difference > x_difference) {
                 if (event1.getY() > event2.getY()) {
                     swipeUp();
+                    moveHistory.push("swipeUp");
                 }
                 else {
                     swipeDown();
-
+                    moveHistory.push("swipeDown");
                 }
             }
 
             else {
                 if (event1.getX() > event2.getX()) {
                     swipeLeft();
+                    moveHistory.push("swipeLeft");
                 }
                 else {
                     swipeRight();
-
+                    moveHistory.push("swipeRight");
                 }
             }
             // only set new Tile when game state is changed
@@ -251,7 +289,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 this.hasChanged = false;
             }
-            Log.i("CHECK", "" + increaseScore);
 
         }
 

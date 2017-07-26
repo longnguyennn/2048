@@ -9,6 +9,7 @@ import android.text.style.AbsoluteSizeSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.widget.RelativeLayout;
 
 /**
  * Created by longpro on 7/22/17.
@@ -20,11 +21,31 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
     private int textSize = 18;
     private int scoreSize;
     private Context context;
+    // params for calculating layout.params
+    private final int layoutWidth;
+    private final int layoutHeight;
+    private final int layoutMargin;
+    private final int leftMargin;
+    private final int topMargin;
+    private final int rightMargin;
+    private final int btmMargin;
+    private final Logo logo;
+    public RelativeLayout.LayoutParams params;
 
-    public CurrentScore(Context context) {
+    public CurrentScore(Context context, int layoutWidth, int layoutHeight, int layoutMargin, Logo logo) {
         super(context);
         this.context = context;
+        this.layoutWidth = layoutWidth;
+        this.layoutHeight = layoutHeight;
+        this.layoutMargin = layoutMargin;
+        this.logo = logo;
         currentScore = 0;
+        // set params
+        this.leftMargin = this.layoutMargin;
+        this.topMargin = 0;
+        this.rightMargin = this.layoutMargin;
+        this.btmMargin = this.layoutMargin / 2;
+        this.setParams();
         // set string
         string = new SpannableStringBuilder("SCORE\n" +
                 Integer.toString(this.currentScore));
@@ -55,7 +76,6 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
 
     // FIXME: 7/22/17 need to be fixed
     public void setNewScore(int newScore) {
-        newScore = 10000;
         this.currentScore = newScore;
         // change AbsoluteSizeSpan
         if (this.currentScore > 999)  {
@@ -66,8 +86,8 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
                 this.string.removeSpan(i);
             }
             // set scoreSize for each threshold
-            if (this.currentScore > 99999) { scoreSize = 20; }
-            else if (this.currentScore > 9999) { scoreSize = 24; }
+//            if (this.currentScore > 99999) { scoreSize = 20; }
+            if (this.currentScore > 9999) { scoreSize = 24; }
             else { scoreSize = 26;}
             int scorePxValue = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                     scoreSize, this.context.getResources().getDisplayMetrics());
@@ -77,5 +97,13 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
         }
         string.replace("SCORE".length() + 1, string.length(), Integer.toString(this.currentScore));
         this.setText(string);
+    }
+
+    private void setParams() {
+        int height = this.layoutHeight / 2;
+        int width = (this.layoutWidth - 4 * this.layoutMargin - logo.dimension) / 2;
+        params = new RelativeLayout.LayoutParams(width, height);
+        params.addRule(RelativeLayout.RIGHT_OF, logo.getId());
+        params.setMargins(this.leftMargin, this.topMargin, this.rightMargin, this.btmMargin);
     }
 }
