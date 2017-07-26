@@ -3,27 +3,30 @@ package com.example.longpro.a2048;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
 /**
- * Created by longpro on 7/26/17.
+ * Created by longpro on 7/27/17.
  */
 
-public class UndoButton extends android.support.v7.widget.AppCompatTextView {
-    public RelativeLayout.LayoutParams params;
+public class ResetButton extends android.support.v7.widget.AppCompatTextView {
+    private Logo logo;
     private HighScore highScore;
-    private ResetButton resetButton;
     private final int dimension;
+    private final int leftMargin;
+    private final int topMargin = 0;
+    private final int rightMargin = 0;
+    private final int btmMargin = 0;
+    public RelativeLayout.LayoutParams params;
 
-    public UndoButton(Context context, HighScore highScore, ResetButton resetButton) {
+    public ResetButton(Context context, Logo logo, HighScore highScore) {
         super(context);
+        this.logo = logo;
         this.highScore = highScore;
-        this.resetButton = resetButton;
-        // set dimension equals to resetButton's dimension
-        this.dimension = resetButton.getDimension();
+        this.dimension = logo.dimension - highScore.height - highScore.btmMargin;
+        this.leftMargin = highScore.btmMargin;
         this.setParams();
         this.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -44,8 +47,13 @@ public class UndoButton extends android.support.v7.widget.AppCompatTextView {
 
     private void setParams() {
         params = new RelativeLayout.LayoutParams(this.dimension, this.dimension);
-        params.addRule(RelativeLayout.LEFT_OF, resetButton.getId());
-        params.addRule(RelativeLayout.BELOW, highScore.getId());
+        // these addRule are not really necessary
+        params.addRule(RelativeLayout.BELOW, this.highScore.getId());
+        params.addRule(RelativeLayout.ALIGN_RIGHT, this.highScore.getId());
+        params.addRule(RelativeLayout.ALIGN_BOTTOM, this.logo.getId());
+        // set margin here
+        params.setMargins(this.leftMargin, this.topMargin, this.rightMargin,
+                                    this.btmMargin);
     }
 
     public int getDimension() { return this.dimension; }

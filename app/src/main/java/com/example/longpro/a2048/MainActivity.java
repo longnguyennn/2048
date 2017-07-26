@@ -40,8 +40,15 @@ public class MainActivity extends AppCompatActivity {
     private Game game;
     private int tileMargin;
     private int tileDimension;
-    private CurrentScore currentScore;
     private SizedStack<String> moveHistory;
+    private CurrentScore currentScore;
+    private Logo logo;
+    private Paragraph paragraph;
+    private HighScore highScore;
+    private UndoButton undoButton;
+    private ResetButton resetButton;
+    private RelativeLayout gameHeader;
+    private RelativeLayout gameContainer;
 
 
     @Override
@@ -52,90 +59,58 @@ public class MainActivity extends AppCompatActivity {
         moveHistory = new SizedStack<>(10);
         tileArray = new Tile[4][4];
         context = this;
-        final RelativeLayout game_container = (RelativeLayout) findViewById(R.id.game_container);
+        gameContainer = (RelativeLayout) findViewById(R.id.game_container);
         mDetector = new GestureDetectorCompat(context, new MyGestureDetector());
         mListener = new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
-                game_container.onTouchEvent(event);
+                gameContainer.onTouchEvent(event);
                 mDetector.onTouchEvent(event);
                 return true;
             }
         };
-        game_container.setOnTouchListener(mListener);
+        gameContainer.setOnTouchListener(mListener);
 
-        final RelativeLayout game_header = (RelativeLayout) findViewById(R.id.game_header);
-        game_header.post(new Runnable() {
+        gameHeader = (RelativeLayout) findViewById(R.id.game_header);
+        gameHeader.post(new Runnable() {
             @Override
             public void run() {
-                int layoutWidth = game_header.getWidth();
-                int layoutMargin = layoutWidth / 25;
-                LinearLayout.LayoutParams ghParams = (LinearLayout.LayoutParams) game_header.getLayoutParams();
-                ghParams.setMargins(layoutMargin, layoutMargin, layoutMargin, layoutMargin);
-
+                int width = gameHeader.getWidth();
+                int height = gameHeader.getHeight();
+                int layoutMargin = width / 25;
+                int layoutWidth = width - 2 * layoutMargin;
+                int layoutHeight = height - 2 * layoutMargin;
+                LinearLayout.LayoutParams headerParams = (LinearLayout.LayoutParams) gameHeader.getLayoutParams();
+                headerParams.setMargins(layoutMargin, layoutMargin, layoutMargin, layoutMargin);
                 // add Logo to game_header
-                int layoutHeight = game_header.getHeight() - 2 * layoutMargin;
-                int logoDimension = layoutHeight * 6 / 7;
-                RelativeLayout.LayoutParams logoParams = new RelativeLayout.LayoutParams(logoDimension, logoDimension);
-                Logo logo = new Logo(context);
-                game_header.addView(logo, logoParams);
+                logo = new Logo(context, layoutWidth, layoutHeight);
+                gameHeader.addView(logo, logo.params);
                 // add paragraph
-                Paragraph paragraph = new Paragraph(context);
-                RelativeLayout.LayoutParams pParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                pParams.addRule(RelativeLayout.BELOW, logo.getId());
-                game_header.addView(paragraph, pParams);
+                paragraph = new Paragraph(context, logo);
+                gameHeader.addView(paragraph, paragraph.params);
                 // add currentScore
-                currentScore = new CurrentScore(context);
-                int scoreHeight = logoDimension * 7 / 12;
-                int scoreWidth = (layoutWidth - 4 * layoutMargin - logoDimension) / 2;
-                RelativeLayout.LayoutParams csParams = new RelativeLayout.LayoutParams(scoreWidth, scoreHeight);
-                csParams.addRule(RelativeLayout.RIGHT_OF, logo.getId());
-                csParams.setMargins(layoutMargin, 0, layoutMargin, layoutMargin / 2);
-                game_header.addView(currentScore, csParams);
+                currentScore = new CurrentScore(context, layoutWidth, layoutHeight, layoutMargin, logo);
+                gameHeader.addView(currentScore, currentScore.params);
                 // add highScore here...
-                CurrentScore highScore = new CurrentScore(context);
-                RelativeLayout.LayoutParams hsParams = new RelativeLayout.LayoutParams(scoreWidth, scoreHeight);
-                hsParams.addRule(RelativeLayout.RIGHT_OF, currentScore.getId());
-                hsParams.setMargins(0, 0, 0, layoutMargin * 2 / 3);
-                game_header.addView(highScore, hsParams);
-                // add a square undoButton
-                // add onTouchListener
-                UndoButton undoButton = new UndoButton(context, game_header);
-                int undoDimension = logoDimension - scoreHeight - layoutMargin * 2 / 3;
-                RelativeLayout.LayoutParams undoParams = new RelativeLayout.LayoutParams(undoDimension, undoDimension);
-                undoParams.addRule(RelativeLayout.BELOW, highScore.getId());
-                undoParams.addRule(RelativeLayout.ALIGN_RIGHT, highScore.getId());
-                // this is for testing purpose
-                GradientDrawable background = new GradientDrawable();
-                background.setShape(GradientDrawable.RECTANGLE);
-                background.setCornerRadius(5);
-                int bgColor = Color.argb(150, 219, 219, 15);
-                background.setColor(bgColor);
-                undoButton.setBackground(background);
-                undoButton.setId(View.generateViewId());
-                // need to set layoutMargin * 2 / 3 to a variable
-                undoParams.setMargins(layoutMargin * 2 / 3, 0, 0, 0);
-                // maybe setMargin here ...
-                game_header.addView(undoButton, undoParams);
-
-                // add another square button here ... modify later
-                TextView button = new TextView(context);
-                RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(undoDimension, undoDimension);
-                buttonParams.addRule(RelativeLayout.BELOW, highScore.getId());
-                buttonParams.addRule(RelativeLayout.LEFT_OF, undoButton.getId());
-                button.setBackground(background);
-                game_header.addView(button, buttonParams);
+                highScore = new HighScore(context, currentScore, layoutMargin);
+                gameHeader.addView(highScore, highScore.params);
+                // add resetButton with onTouchListener
+                resetButton = new ResetButton(context, logo, highScore);
+                gameHeader.addView(resetButton, resetButton.params);
+                // add undoButton with onTouchListener
+                undoButton = new UndoButton(context, highScore, resetButton);
+                gameHeader.addView(undoButton, undoButton.params);
 
 
 
             }
         });
 
-        game_container.post(new Runnable() {
+        gameContainer.post(new Runnable() {
             @Override
             public void run() {
-                int layoutWidth = game_container.getWidth();
+                int layoutWidth = gameContainer.getWidth();
                 int layoutMargin = layoutWidth / 25;
-                LinearLayout.LayoutParams gcParams = (LinearLayout.LayoutParams) game_container.getLayoutParams();
+                LinearLayout.LayoutParams gcParams = (LinearLayout.LayoutParams) gameContainer.getLayoutParams();
                 gcParams.setMargins(layoutMargin, 0, layoutMargin, layoutMargin);
                 int actualDimension = layoutWidth - 2 * layoutMargin;
                 tileMargin = actualDimension / 35;
@@ -158,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                                 TileParams.setMargins(btwMargin, tileMargin, btwMargin, btwMargin);
                                 TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
                             }
-                            game_container.addView(tile, TileParams);
+                            gameContainer.addView(tile, TileParams);
                             tileArray[i][j] = tile;
                         }
                     }
@@ -179,12 +154,12 @@ public class MainActivity extends AppCompatActivity {
                                 TileParams.addRule(RelativeLayout.RIGHT_OF, tileArray[i][j - 1].getId());
                                 TileParams.addRule(RelativeLayout.BELOW, tileArray[i - 1][j].getId());
                             }
-                            game_container.addView(tile, TileParams);
+                            gameContainer.addView(tile, TileParams);
                             tileArray[i][j] = tile;
                         }
                     }
                 }
-                game = new Game(game_container);
+                game = new Game(gameContainer);
             }
         });
 

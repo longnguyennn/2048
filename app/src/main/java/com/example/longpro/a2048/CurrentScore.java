@@ -18,7 +18,8 @@ import android.widget.RelativeLayout;
 public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
     private int currentScore;
     private SpannableStringBuilder string;
-    private int textSize = 18;
+    private final int textSize = 18;
+    private final int initScoreSize = 30;
     private int scoreSize;
     private Context context;
     // params for calculating layout.params
@@ -26,11 +27,14 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
     private final int layoutHeight;
     private final int layoutMargin;
     private final int leftMargin;
-    private final int topMargin;
+    private final int topMargin = 0;
     private final int rightMargin;
     private final int btmMargin;
     private final Logo logo;
+    public int width;
+    public int height;
     public RelativeLayout.LayoutParams params;
+
 
     public CurrentScore(Context context, int layoutWidth, int layoutHeight, int layoutMargin, Logo logo) {
         super(context);
@@ -42,22 +46,27 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
         currentScore = 0;
         // set params
         this.leftMargin = this.layoutMargin;
-        this.topMargin = 0;
         this.rightMargin = this.layoutMargin;
         this.btmMargin = this.layoutMargin / 2;
         this.setParams();
-        // set string
+        // set string = "SCORE\ncurrentScore"
         string = new SpannableStringBuilder("SCORE\n" +
                 Integer.toString(this.currentScore));
+        // Apply style for "Text"
+        // convert dp to px
         int textPxValue = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
                 textSize, this.context.getResources().getDisplayMetrics());
         string.setSpan(new AbsoluteSizeSpan(textPxValue), 0, 5, 0);
+        // set text color to ..
         string.setSpan(new ForegroundColorSpan(Color.argb(255, 216, 204, 199)), 0, 5, 0);
-        scoreSize = 30;
+        // Apply style for "currentScore"
+        this.scoreSize = this.initScoreSize;
+        // convert dp to px
         int scorePxValue = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
-                scoreSize, context.getResources().getDisplayMetrics());
+                this.scoreSize, context.getResources().getDisplayMetrics());
         string.setSpan(new AbsoluteSizeSpan(scorePxValue), "SCORE".length() + 1,
                 string.length(), 0);
+        // set score color to white
         string.setSpan(new ForegroundColorSpan(Color.argb(255, 247, 244, 244)), "SCORE".length() + 1,
                 string.length(), 0);
         this.setText(string);
@@ -100,10 +109,10 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
     }
 
     private void setParams() {
-        int height = this.layoutHeight / 2;
-        int width = (this.layoutWidth - 4 * this.layoutMargin - logo.dimension) / 2;
-        params = new RelativeLayout.LayoutParams(width, height);
-        params.addRule(RelativeLayout.RIGHT_OF, logo.getId());
-        params.setMargins(this.leftMargin, this.topMargin, this.rightMargin, this.btmMargin);
+        height = this.layoutHeight * 11 / 20;
+        width = (this.layoutWidth - 2 * this.layoutMargin - logo.dimension) / 2;
+        this.params = new RelativeLayout.LayoutParams(width, height);
+        this.params.addRule(RelativeLayout.RIGHT_OF, logo.getId());
+        this.params.setMargins(this.leftMargin, this.topMargin, this.rightMargin, this.btmMargin);
     }
 }
