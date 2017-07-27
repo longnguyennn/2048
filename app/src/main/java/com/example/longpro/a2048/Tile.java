@@ -14,6 +14,7 @@ public class Tile extends android.support.v7.widget.AppCompatTextView {
     private int value;
     public int position;
 
+    // {textSize, backgroundColor, textColor} for each tile value
     private final int[][] TILE_PROPERTY = {
             {44, Color.argb(255, 216, 204, 199), Color.argb(205, 45, 42, 42)},
             {44, Color.argb(225, 239, 232, 232), Color.argb(205, 45, 42, 42)},

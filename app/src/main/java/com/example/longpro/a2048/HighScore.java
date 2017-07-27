@@ -9,7 +9,12 @@ import android.widget.RelativeLayout;
  * Created by longpro on 7/26/17.
  */
 
+// currently nothing goes in here
 public class HighScore extends android.support.v7.widget.AppCompatTextView {
+    // colors..
+    private final int bgColor = Color.argb(200, 196, 174, 166);
+
+
     public RelativeLayout.LayoutParams params;
     public int width;
     public int height;
@@ -20,7 +25,6 @@ public class HighScore extends android.support.v7.widget.AppCompatTextView {
     // set highscore here
     private int highScore;
     private CurrentScore currentScore;
-    private final int bgColor = Color.argb(200, 196, 174, 166);
 
 
     public HighScore(Context context, CurrentScore currentScore, int layoutMargin) {

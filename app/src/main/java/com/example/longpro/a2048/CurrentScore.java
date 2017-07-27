@@ -16,6 +16,11 @@ import android.widget.RelativeLayout;
  */
 
 public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
+    // colors
+    private final int bgColor = Color.argb(200, 196, 174, 166);
+    private final int textColor = Color.argb(255, 216, 204, 199);
+    private final int scoreColor = Color.argb(255, 247, 244, 244);
+
     private int currentScore;
     private SpannableStringBuilder string;
     private final int textSize = 18;
@@ -58,7 +63,7 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
                 textSize, this.context.getResources().getDisplayMetrics());
         string.setSpan(new AbsoluteSizeSpan(textPxValue), 0, 5, 0);
         // set text color to ..
-        string.setSpan(new ForegroundColorSpan(Color.argb(255, 216, 204, 199)), 0, 5, 0);
+        string.setSpan(new ForegroundColorSpan(this.textColor), 0, 5, 0);
         // Apply style for "currentScore"
         this.scoreSize = this.initScoreSize;
         // convert dp to px
@@ -67,7 +72,7 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
         string.setSpan(new AbsoluteSizeSpan(scorePxValue), "SCORE".length() + 1,
                 string.length(), 0);
         // set score color to white
-        string.setSpan(new ForegroundColorSpan(Color.argb(255, 247, 244, 244)), "SCORE".length() + 1,
+        string.setSpan(new ForegroundColorSpan(this.scoreColor), "SCORE".length() + 1,
                 string.length(), 0);
         this.setText(string);
         this.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -76,8 +81,7 @@ public class CurrentScore extends android.support.v7.widget.AppCompatTextView {
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(5);
-        int bgColor = Color.argb(200, 196, 174, 166);
-        background.setColor(bgColor);
+        background.setColor(this.bgColor);
         this.setBackground(background);
         // set id
         this.setId(generateViewId());

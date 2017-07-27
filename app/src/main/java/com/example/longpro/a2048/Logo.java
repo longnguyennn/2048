@@ -13,6 +13,12 @@ import android.widget.RelativeLayout;
  */
 
 public class Logo extends android.support.v7.widget.AppCompatTextView {
+    // colors
+    private final int bgColor = Color.argb(150, 219, 219, 15);
+    private final int textColor = Color.argb(255, 247, 244, 244);
+
+    private final String text = "2048";
+
     public RelativeLayout.LayoutParams params;
     public int dimension;
     private final int layoutWidth;
@@ -25,18 +31,16 @@ public class Logo extends android.support.v7.widget.AppCompatTextView {
         this.layoutHeight = layoutHeight;
         this.setParams();
         // set Logo text
-        int textColor = Color.argb(255, 247, 244, 244);
-        this.setText("2048");
+        this.setText(this.text);
         this.setGravity(Gravity.CENTER);
         this.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
         this.setTextSize(TypedValue.COMPLEX_UNIT_SP, 36);
-        this.setTextColor(textColor);
+        this.setTextColor(this.textColor);
         // set Logo background
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(5);
-        int bgColor = Color.argb(150, 219, 219, 15);
-        background.setColor(bgColor);
+        background.setColor(this.bgColor);
         this.setBackground(background);
         // set id
         this.setId(generateViewId());

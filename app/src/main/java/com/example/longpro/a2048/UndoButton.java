@@ -15,6 +15,12 @@ import android.widget.RelativeLayout;
  */
 
 public class UndoButton extends android.support.v7.widget.AppCompatTextView {
+    // colors
+    private final int bgColor = Color.argb(150, 219, 219, 15);
+    // modify this to change textColor
+    private int textColor = 0;
+
+
     public RelativeLayout.LayoutParams params;
     private HighScore highScore;
     private ResetButton resetButton;
@@ -38,8 +44,7 @@ public class UndoButton extends android.support.v7.widget.AppCompatTextView {
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(5);
-        int bgColor = Color.argb(150, 219, 219, 15);
-        background.setColor(bgColor);
+        background.setColor(this.bgColor);
         this.setBackground(background);
         // set id
         this.setId(View.generateViewId());
@@ -50,6 +55,9 @@ public class UndoButton extends android.support.v7.widget.AppCompatTextView {
         this.setTypeface(tf);
         this.setGravity(Gravity.CENTER);
         this.setTextSize(this.iconSize);
+        // FIXME: 7/27/17
+        if (this.textColor != 0) { this.setTextColor(this.textColor); }
+
     }
 
     private void setParams() {

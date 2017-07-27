@@ -12,6 +12,11 @@ import android.widget.RelativeLayout;
  */
 
 public class GameMenu extends android.support.v7.widget.AppCompatTextView {
+    // colors
+    private final int bgColor = Color.argb(150, 219, 219, 15);
+    // modify this to change textColor
+    private int textColor = 0;
+
     public RelativeLayout.LayoutParams params;
     private int cScoreId;
     private int logoId;
@@ -27,14 +32,15 @@ public class GameMenu extends android.support.v7.widget.AppCompatTextView {
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setCornerRadius(5);
-        int bgColor = Color.argb(150, 219, 219, 15);
-        background.setColor(bgColor);
+        background.setColor(this.bgColor);
         this.setBackground(background);
         // set Text
         this.setGravity(Gravity.CENTER);
         this.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
         this.setText(text);
         this.setTextSize(textSize);
+        // FIXME: 7/27/17
+        if (this.textColor != 0) { this.setTextColor(this.textColor); }
     }
 
     private void setParams() {

@@ -11,6 +11,9 @@ import android.widget.RelativeLayout;
  */
 
 public class Paragraph extends android.support.v7.widget.AppCompatTextView {
+    // colors
+    private int textColor = 0;
+
     public RelativeLayout.LayoutParams params;
     private Logo logo;
 
@@ -24,6 +27,8 @@ public class Paragraph extends android.support.v7.widget.AppCompatTextView {
         this.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         this.setGravity(Gravity.CENTER_VERTICAL);
         this.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        // FIXME: 7/27/17
+        if (this.textColor != 0) { this.setTextColor(this.textColor); }
     }
 
     // need further tests
