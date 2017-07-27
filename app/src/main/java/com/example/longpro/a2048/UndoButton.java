@@ -2,8 +2,10 @@ package com.example.longpro.a2048;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -17,6 +19,7 @@ public class UndoButton extends android.support.v7.widget.AppCompatTextView {
     private HighScore highScore;
     private ResetButton resetButton;
     private final int dimension;
+    private int iconSize = 18;
 
     public UndoButton(Context context, HighScore highScore, ResetButton resetButton) {
         super(context);
@@ -40,6 +43,13 @@ public class UndoButton extends android.support.v7.widget.AppCompatTextView {
         this.setBackground(background);
         // set id
         this.setId(View.generateViewId());
+        // set icon
+        this.setText(R.string.fa_undo);
+        Typeface tf = Typeface.createFromAsset(context.getAssets(),
+                "fontawesome-webfont.ttf");
+        this.setTypeface(tf);
+        this.setGravity(Gravity.CENTER);
+        this.setTextSize(this.iconSize);
     }
 
     private void setParams() {

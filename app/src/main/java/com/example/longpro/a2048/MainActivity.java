@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private HighScore highScore;
     private UndoButton undoButton;
     private ResetButton resetButton;
+    private GameMenu gameMenu;
     private RelativeLayout gameHeader;
     private RelativeLayout gameContainer;
 
@@ -99,7 +100,9 @@ public class MainActivity extends AppCompatActivity {
                 // add undoButton with onTouchListener
                 undoButton = new UndoButton(context, highScore, resetButton);
                 gameHeader.addView(undoButton, undoButton.params);
-
+                // add menu
+                gameMenu = new GameMenu(context, currentScore, logo);
+                gameHeader.addView(gameMenu, gameMenu.params);
 
 
             }
